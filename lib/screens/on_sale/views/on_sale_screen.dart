@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:shop/components/buy_full_ui_kit.dart';
 
 class OnSaleScreen extends StatelessWidget {
   const OnSaleScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const BuyFullKit(
-      images: ["assets/screens/On sales.png"],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('On Sale'),
+      ),
+      body: Center(
+        child: const Text(
+          'On Sale Products List',
+          style: TextStyle(fontSize: 18),
+        ),
+      ),
     );
   }
 }
