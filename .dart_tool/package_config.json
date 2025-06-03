@@ -308,6 +308,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "shimmer",
+      "rootUri": "file:///C:/Users/moral/AppData/Local/Pub/Cache/hosted/pub.dev/shimmer-2.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "sky_engine",
       "rootUri": "file:///D:/Flutter/flutter_windows_3.29.3-stable/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",

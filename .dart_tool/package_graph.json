@@ -15,6 +15,7 @@
         "flutter_svg",
         "flutter_widget_from_html_core",
         "form_field_validator",
+        "shimmer",
         "url_launcher"
       ],
       "devDependencies": [
@@ -55,6 +56,13 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "shimmer",
+      "version": "2.0.0",
+      "dependencies": [
+        "flutter"
       ]
     },
     {
