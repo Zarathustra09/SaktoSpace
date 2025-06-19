@@ -3,14 +3,21 @@ import 'package:flutter_svg/svg.dart';
 import 'package:shop/components/list_tile/divider_list_tile.dart';
 import 'package:shop/components/network_image_with_loader.dart';
 import 'package:shop/constants.dart';
+import 'package:shop/route/route_constants.dart';
 import 'package:shop/route/screen_export.dart';
+import 'package:shop/services/auth/login_service.dart';
 
 import 'components/profile_card.dart';
 import 'components/profile_menu_item_list_tile.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,7 +163,19 @@ class ProfileScreen extends StatelessWidget {
 
           // Log Out
           ListTile(
-            onTap: () {},
+            onTap: () async {
+              // Call logout method from AuthService
+              final AuthService authService = AuthService();
+              await authService.logout();
+
+              if (!mounted) return;
+              // Navigate back to login screen after logout
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                logInScreenRoute,
+                (route) => false
+              );
+            },
             minLeadingWidth: 24,
             leading: SvgPicture.asset(
               "assets/icons/Logout.svg",
@@ -171,7 +190,8 @@ class ProfileScreen extends StatelessWidget {
               "Log Out",
               style: TextStyle(color: errorColor, fontSize: 14, height: 1),
             ),
-          )
+          ),
+          const SizedBox(height: defaultPadding),
         ],
       ),
     );
