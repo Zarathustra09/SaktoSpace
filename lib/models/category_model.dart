@@ -20,40 +20,43 @@ final List<CategoryModel> demoCategoriesWithImage = [
 
 final List<CategoryModel> demoCategories = [
   CategoryModel(
-    title: "On sale",
-    svgSrc: "assets/icons/Sale.svg",
+    title: "Furniture",
+    svgSrc: "assets/icons/furniture.svg",
     subCategories: [
-      CategoryModel(title: "All Clothing"),
+      CategoryModel(title: "All Furniture"),
       CategoryModel(title: "New In"),
-      CategoryModel(title: "Coats & Jackets"),
-      CategoryModel(title: "Dresses"),
-      CategoryModel(title: "Jeans"),
+      CategoryModel(title: "Sofas"),
+      CategoryModel(title: "Chairs"),
     ],
   ),
   CategoryModel(
-    title: "Man’s & Woman’s",
-    svgSrc: "assets/icons/Man&Woman.svg",
+    title: "Decoration",
+    svgSrc: "assets/icons/decor.svg",
     subCategories: [
-      CategoryModel(title: "All Clothing"),
+      CategoryModel(title: "All Decoration"),
       CategoryModel(title: "New In"),
-      CategoryModel(title: "Coats & Jackets"),
+      CategoryModel(title: "Vases"),
+      CategoryModel(title: "Wall Art"),
     ],
   ),
   CategoryModel(
-    title: "Kids",
-    svgSrc: "assets/icons/Child.svg",
+    title: "Lighting",
+    svgSrc: "assets/icons/lighting.svg",
     subCategories: [
-      CategoryModel(title: "All Clothing"),
+      CategoryModel(title: "All Lighting"),
       CategoryModel(title: "New In"),
-      CategoryModel(title: "Coats & Jackets"),
+      CategoryModel(title: "Ceiling Lights"),
+      CategoryModel(title: "Table Lamps"),
     ],
   ),
   CategoryModel(
-    title: "Accessories",
-    svgSrc: "assets/icons/Accessories.svg",
+    title: "Outdoor",
+    svgSrc: "assets/icons/outdoor.svg",
     subCategories: [
-      CategoryModel(title: "All Clothing"),
+      CategoryModel(title: "All Outdoor"),
       CategoryModel(title: "New In"),
+      CategoryModel(title: "Patio Furniture"),
+      CategoryModel(title: "Garden Decor"),
     ],
   ),
 ];

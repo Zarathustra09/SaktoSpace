@@ -6,15 +6,14 @@ import 'package:shop/components/custom_modal_bottom_sheet.dart';
 import 'package:shop/components/product/product_card.dart';
 import 'package:shop/constants.dart';
 import 'package:shop/screens/product/views/product_returns_screen.dart';
-
 import 'package:shop/route/screen_export.dart';
-
 import 'components/notify_me_card.dart';
 import 'components/product_images.dart';
 import 'components/product_info.dart';
 import 'components/product_list_tile.dart';
 import '../../../components/review_card.dart';
 import 'product_buy_now_screen.dart';
+import 'package:shop/screens/product/views/product_full_description.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
   const ProductDetailsScreen({super.key, this.isProductAvailable = true});
@@ -60,11 +59,10 @@ class ProductDetailsScreen extends StatelessWidget {
               images: [productDemoImg1, productDemoImg2, productDemoImg3],
             ),
             ProductInfo(
-              brand: "LIPSY LONDON",
-              title: "Sleeveless Ruffle",
+              brand: "HomeStyle",
+              title: "Modern Sofa",
               isAvailable: isProductAvailable,
-              description:
-                  "A cool gray cap in soft corduroy. Watch me.' By buying cotton products from Lindex, you’re supporting more responsibly...",
+              description: "3‑seater fabric sofa with wooden legs.",
               rating: 4.4,
               numOfReviews: 126,
             ),
@@ -72,11 +70,11 @@ class ProductDetailsScreen extends StatelessWidget {
               svgSrc: "assets/icons/Product.svg",
               title: "Product Details",
               press: () {
-                customModalBottomSheet(
-                  context,
-                  height: MediaQuery.of(context).size.height * 0.92,
-                  child: const BuyFullKit(
-                      images: ["assets/screens/Product detail.png"]),
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    fullscreenDialog: true,
+                    builder: (_) => const ProductFullDescription(),
+                  ),
                 );
               },
             ),
@@ -87,9 +85,7 @@ class ProductDetailsScreen extends StatelessWidget {
                 customModalBottomSheet(
                   context,
                   height: MediaQuery.of(context).size.height * 0.92,
-                  child: const BuyFullKit(
-                    images: ["assets/screens/Shipping information.png"],
-                  ),
+                  child: const ProductFullDescription(),
                 );
               },
             ),
@@ -148,9 +144,9 @@ class ProductDetailsScreen extends StatelessWidget {
                         right: index == 4 ? defaultPadding : 0),
                     child: ProductCard(
                       image: productDemoImg2,
-                      title: "Sleeveless Tiered Dobby Swing Dress",
-                      brandName: "LIPSY LONDON",
-                      price: 24.65,
+                      title: "Oak Coffee Table",
+                      brandName: "WoodWorks",
+                      price: 4500,
                       priceAfetDiscount: index.isEven ? 20.99 : null,
                       dicountpercent: index.isEven ? 25 : null,
                       press: () {},

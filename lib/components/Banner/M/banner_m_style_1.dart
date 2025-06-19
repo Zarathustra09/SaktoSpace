@@ -6,10 +6,11 @@ import '../../../constants.dart';
 class BannerMStyle1 extends StatelessWidget {
   const BannerMStyle1({
     super.key,
-    this.image = "https://i.imgur.com/UP7xhPG.png",
+    this.image = "assets/images/coffee_table.jpg",
     required this.text,
     required this.press,
   });
+
   final String? image;
   final String text;
   final VoidCallback press;
@@ -48,10 +49,7 @@ class BannerMStyle1 extends StatelessWidget {
               ),
               const SizedBox(
                 width: 64,
-                child: Divider(
-                  color: Colors.white,
-                  thickness: 2,
-                ),
+                child: Divider(color: Colors.white, thickness: 2),
               ),
               const Spacer(flex: 2),
             ],
