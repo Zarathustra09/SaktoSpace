@@ -1,6 +1,7 @@
 class CategoryModel {
   final String title;
-  final String? image, svgSrc;
+  final String? image;
+  final String? svgSrc;
   final List<CategoryModel>? subCategories;
 
   CategoryModel({
@@ -11,13 +12,27 @@ class CategoryModel {
   });
 }
 
+// Categories with images (for main shop screen tiles)
 final List<CategoryModel> demoCategoriesWithImage = [
-  CategoryModel(title: "Woman’s", image: "https://i.imgur.com/5M89G2P.png"),
-  CategoryModel(title: "Man’s", image: "https://i.imgur.com/UM3GdWg.png"),
-  CategoryModel(title: "Kid’s", image: "https://i.imgur.com/Lp0D6k5.png"),
-  CategoryModel(title: "Accessories", image: "https://i.imgur.com/3mSE5sN.png"),
+  CategoryModel(
+    title: "Furniture",
+    image: "assets/images/furniture1.png",
+  ),
+  CategoryModel(
+    title: "Decor",
+    image: "assets/images/decor1.png",
+  ),
+  CategoryModel(
+    title: "Lighting",
+    image: "assets/images/lighting1.png",
+  ),
+  CategoryModel(
+    title: "Outdoor",
+    image: "assets/images/outdoor1.png",
+  ),
 ];
 
+// Categories with optional icons and subcategories
 final List<CategoryModel> demoCategories = [
   CategoryModel(
     title: "Furniture",
@@ -26,6 +41,7 @@ final List<CategoryModel> demoCategories = [
       CategoryModel(title: "All Furniture"),
       CategoryModel(title: "New In"),
       CategoryModel(title: "Sofas"),
+      CategoryModel(title: "Beds"),
       CategoryModel(title: "Chairs"),
     ],
   ),
@@ -53,9 +69,9 @@ final List<CategoryModel> demoCategories = [
     title: "Outdoor",
     svgSrc: "assets/icons/outdoor.svg",
     subCategories: [
-      CategoryModel(title: "All Outdoor"),
+      CategoryModel(title: "All Outdoor Furniture"),
       CategoryModel(title: "New In"),
-      CategoryModel(title: "Patio Furniture"),
+      CategoryModel(title: "Patio Sets"),
       CategoryModel(title: "Garden Decor"),
     ],
   ),

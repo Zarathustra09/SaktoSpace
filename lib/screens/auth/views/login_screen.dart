@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shop/constants.dart';
 import 'package:shop/route/route_constants.dart';
+import 'package:shop/services/auth/login_service.dart';
 
 import 'components/login_form.dart';
 
@@ -13,6 +14,9 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +41,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: defaultPadding / 2),
                   const Text(
-                    "Log in with your data that you intered during your registration.",
+                    "Log in with your data that you entered during your registration.",
                   ),
                   const SizedBox(height: defaultPadding),
                   LogInForm(formKey: _formKey),
+                  if (_errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: defaultPadding / 2),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: errorColor),
+                      ),
+                    ),
                   Align(
                     child: TextButton(
                       child: const Text("Forgot password"),
@@ -55,16 +67,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? size.height * 0.1
                         : defaultPadding,
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            entryPointScreenRoute,
-                            ModalRoute.withName(logInScreenRoute));
-                      }
-                    },
-                    child: const Text("Log in"),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : ElevatedButton(
+                            onPressed: _handleLogin,
+                            child: const Text("Log in"),
+                          ),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -85,5 +95,54 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  void _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      try {
+        // Get the form instance from the key
+        final formState = _formKey.currentState!;
+        final form = formState.widget as Form;
+
+        // Extract controllers from the LogInForm
+        final loginForm = form.child as Column;
+        final emailField = loginForm.children[0] as TextFormField;
+        final passwordField = loginForm.children[2] as TextFormField;
+
+        final email = emailField.controller!.text;
+        final password = passwordField.controller!.text;
+
+        final result = await _authService.login(email, password);
+
+        if (result == 'Login successful') {
+          // Navigate to home screen on successful login
+          if (!mounted) return;
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            entryPointScreenRoute,
+            (route) => false,
+          );
+        } else {
+          setState(() {
+            _errorMessage = result;
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _errorMessage = "An error occurred during login";
+        });
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
   }
 }

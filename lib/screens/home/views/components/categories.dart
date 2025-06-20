@@ -4,7 +4,6 @@ import 'package:shop/route/screen_export.dart';
 
 import '../../../../constants.dart';
 
-// For preview
 class CategoryModel {
   final String name;
   final String? svgSrc, route;
@@ -16,23 +15,38 @@ class CategoryModel {
   });
 }
 
+// Updated category list
 List<CategoryModel> demoCategories = [
-  CategoryModel(name: "All Categories"),
+  CategoryModel(name: "All", svgSrc: "assets/icons/Category.svg"),
   CategoryModel(
-      name: "On Sale",
-      svgSrc: "assets/icons/Sale.svg",
-      route: onSaleScreenRoute),
-  CategoryModel(name: "Man's", svgSrc: "assets/icons/Man.svg"),
-  CategoryModel(name: "Woman’s", svgSrc: "assets/icons/Woman.svg"),
+    name: "On Sale",
+    svgSrc: "assets/icons/Sale.svg",
+    route: onSaleScreenRoute,
+  ),
   CategoryModel(
-      name: "Kids", svgSrc: "assets/icons/Child.svg", route: kidsScreenRoute),
+    name: "Furniture",
+    svgSrc: "assets/icons/furniture.svg",
+    route: "/furniture",
+  ),
+  CategoryModel(
+    name: "Decor",
+    svgSrc: "assets/icons/decor.svg",
+    route: "/decor",
+  ),
+  CategoryModel(
+    name: "Lighting",
+    svgSrc: "assets/icons/lighting.svg",
+    route: "/lighting",
+  ),
+  CategoryModel(
+    name: "Outdoor",
+    svgSrc: "assets/icons/outdoor.svg",
+    route: "/outdoor",
+  ),
 ];
-// End For Preview
 
 class Categories extends StatelessWidget {
-  const Categories({
-    super.key,
-  });
+  const Categories({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +58,9 @@ class Categories extends StatelessWidget {
             demoCategories.length,
             (index) => Padding(
               padding: EdgeInsets.only(
-                  left: index == 0 ? defaultPadding : defaultPadding / 2,
-                  right:
-                      index == demoCategories.length - 1 ? defaultPadding : 0),
+                left: index == 0 ? defaultPadding : defaultPadding / 2,
+                right: index == demoCategories.length - 1 ? defaultPadding : 0,
+              ),
               child: CategoryBtn(
                 category: demoCategories[index].name,
                 svgSrc: demoCategories[index].svgSrc,
@@ -90,9 +104,9 @@ class CategoryBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive ? primaryColor : Colors.transparent,
           border: Border.all(
-              color: isActive
-                  ? Colors.transparent
-                  : Theme.of(context).dividerColor),
+            color:
+                isActive ? Colors.transparent : Theme.of(context).dividerColor,
+          ),
           borderRadius: const BorderRadius.all(Radius.circular(30)),
         ),
         child: Row(
