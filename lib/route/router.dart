@@ -128,13 +128,12 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   return MaterialPageRoute(
     //     builder: (context) => const SetupFaceIdScreen(),
     //   );
-    case productDetailsScreenRoute:
-      return MaterialPageRoute(
-        builder: (context) {
-          bool isProductAvailable = settings.arguments as bool? ?? true;
-          return ProductDetailsScreen(isProductAvailable: isProductAvailable);
-        },
-      );
+   // In lib/route/router.dart, update the product details route:
+   case productDetailsScreenRoute:
+     return MaterialPageRoute(
+       builder: (context) => const ProductDetailsScreen(),
+       settings: settings, // This preserves the route arguments (product ID)
+     );
     case productReviewsScreenRoute:
       return MaterialPageRoute(
         builder: (context) => const ProductReviewsScreen(),

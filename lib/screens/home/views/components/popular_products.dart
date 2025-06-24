@@ -1,14 +1,29 @@
+// lib/screens/home/views/components/popular_products.dart
 import 'package:flutter/material.dart';
 import 'package:shop/components/product/product_card.dart';
-import 'package:shop/models/product_model.dart';
+import 'package:shop/models/prod_product_model.dart';
 import 'package:shop/route/screen_export.dart';
-
+import 'package:shop/services/product/product_service.dart';
 import '../../../../constants.dart';
 
-class PopularProducts extends StatelessWidget {
+class PopularProducts extends StatefulWidget {
   const PopularProducts({
     super.key,
   });
+
+  @override
+  State<PopularProducts> createState() => _PopularProductsState();
+}
+
+class _PopularProductsState extends State<PopularProducts> {
+  final ProductService _productService = ProductService();
+  late Future<List<ProdProductModel>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = _productService.getAllProducts();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,36 +38,57 @@ class PopularProducts extends StatelessWidget {
             style: Theme.of(context).textTheme.titleSmall,
           ),
         ),
-        // While loading use 👇
-        // const ProductsSkelton(),
-        SizedBox(
-          height: 220,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            // Find demoPopularProducts on models/ProductModel.dart
-            itemCount: demoPopularProducts.length,
-            itemBuilder: (context, index) => Padding(
-              padding: EdgeInsets.only(
-                left: defaultPadding,
-                right: index == demoPopularProducts.length - 1
-                    ? defaultPadding
-                    : 0,
+        FutureBuilder<List<ProdProductModel>>(
+          future: _productsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 220,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            } else if (snapshot.hasError) {
+              return SizedBox(
+                height: 220,
+                child: Center(child: Text('Error: ${snapshot.error}')),
+              );
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const SizedBox(
+                height: 220,
+                child: Center(child: Text('No products found')),
+              );
+            }
+
+            final products = snapshot.data!;
+
+            return SizedBox(
+              height: 220,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: products.length,
+                itemBuilder: (context, index) => Padding(
+                  padding: EdgeInsets.only(
+                    left: defaultPadding,
+                    right: index == products.length - 1 ? defaultPadding : 0,
+                  ),
+                  child: ProductCard(
+                    image: products[index].image.startsWith('http')
+                      ? products[index].image
+                      : '$storageUrl${products[index].image}',
+                    brandName: products[index].category?.name ?? "Unknown",
+                    title: products[index].name,
+                    price: products[index].price,
+                    // We don't have discount info in API, so not using priceAfterDiscount
+                    // and discountPercent properties
+                    press: () {
+                      Navigator.pushNamed(context, productDetailsScreenRoute,
+                          arguments: products[index].id);
+                    },
+                  ),
+                ),
               ),
-              child: ProductCard(
-                image: demoPopularProducts[index].image,
-                brandName: demoPopularProducts[index].brandName,
-                title: demoPopularProducts[index].title,
-                price: demoPopularProducts[index].price,
-                priceAfetDiscount: demoPopularProducts[index].priceAfetDiscount,
-                dicountpercent: demoPopularProducts[index].dicountpercent,
-                press: () {
-                  Navigator.pushNamed(context, productDetailsScreenRoute,
-                      arguments: index.isEven);
-                },
-              ),
-            ),
-          ),
-        )
+            );
+          },
+        ),
       ],
     );
   }
