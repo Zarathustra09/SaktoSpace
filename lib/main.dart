@@ -43,7 +43,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Sakto Space',
+      title: 'SaktoSpace',
       theme: AppTheme.lightTheme(context),
       // Dark theme is included in the Full template
       themeMode: ThemeMode.light,

@@ -47,7 +47,7 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
               children: [
                 const BackButton(),
                 Text(
-                  "Sleeveless Ruffle",
+                  "Modern Sofa",
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 IconButton(
@@ -92,41 +92,6 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
                   ),
                 ),
                 const SliverToBoxAdapter(child: Divider()),
-                SliverToBoxAdapter(
-                  child: SelectedColors(
-                    colors: const [
-                      Color(0xFFEA6262),
-                      Color(0xFFB1CC63),
-                      Color(0xFFFFBF5F),
-                      Color(0xFF9FE1DD),
-                      Color(0xFFC482DB),
-                    ],
-                    selectedColorIndex: 2,
-                    press: (value) {},
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: SelectedSize(
-                    sizes: const ["S", "M", "L", "XL", "XXL"],
-                    selectedIndex: 1,
-                    press: (value) {},
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(vertical: defaultPadding),
-                  sliver: ProductListTile(
-                    title: "Size guide",
-                    svgSrc: "assets/icons/Sizeguid.svg",
-                    isShowBottomBorder: true,
-                    press: () {
-                      customModalBottomSheet(
-                        context,
-                        height: MediaQuery.of(context).size.height * 0.9,
-                        child: const SizeGuideScreen(),
-                      );
-                    },
-                  ),
-                ),
                 SliverPadding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: defaultPadding),
