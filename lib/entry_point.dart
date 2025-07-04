@@ -15,9 +15,12 @@ class _EntryPointState extends State<EntryPoint> {
   final List _pages = const [
     HomeScreen(),
     DiscoverScreen(),
-    BookmarkScreen(),
+
     // EmptyCartScreen(), // if Cart is empty
     CartScreen(),
+
+    HomeBotPage(),
+
     ProfileScreen(),
   ];
   int _currentIndex = 0;
@@ -126,15 +129,15 @@ class _EntryPointState extends State<EntryPoint> {
               label: "Discover",
             ),
             BottomNavigationBarItem(
-              icon: svgIcon("assets/icons/Bookmark.svg"),
-              activeIcon:
-                  svgIcon("assets/icons/Bookmark.svg", color: primaryColor),
-              label: "Bookmark",
-            ),
-            BottomNavigationBarItem(
               icon: svgIcon("assets/icons/Bag.svg"),
               activeIcon: svgIcon("assets/icons/Bag.svg", color: primaryColor),
               label: "Cart",
+            ),
+            BottomNavigationBarItem(
+              icon: svgIcon("assets/icons/chatbot.svg"),
+              activeIcon:
+                  svgIcon("assets/icons/chatbot.svg", color: primaryColor),
+              label: "ChatBot",
             ),
             BottomNavigationBarItem(
               icon: svgIcon("assets/icons/Profile.svg"),

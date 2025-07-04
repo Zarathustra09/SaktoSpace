@@ -80,6 +80,5 @@ final emaildValidator = MultiValidator([
 
 const pasNotMatchErrorText = "passwords do not match";
 
-
-const String baseUrl = "http://192.168.100.242/api";
-const String storageUrl = "http://192.168.100.242";
+const String baseUrl = "http://192.168.1.5/api";
+const String storageUrl = "http://192.168.1.5/storage";
