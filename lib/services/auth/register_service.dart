@@ -35,14 +35,14 @@ class RegisterService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       final data = jsonDecode(response.body);
 
-      // Check if the API returns a token and user_id
+      // Extract token and user_id from the response structure
       final token = data['token'];
-      final userId = data['user_id'];
+      final userId = data['user']?['id'];
 
       if (token != null && userId != null) {
         print('Registration successful, token: $token, userId: $userId');
 
-        // Store the token and user_id
+        // Store the token, user_id, and set isNew to true
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('authToken', token);
         await prefs.setInt('userId', userId);
