@@ -189,7 +189,7 @@ class _ProductImagesState extends State<ProductImages> {
   }
 }
 
-// AR Viewer Screen - Similar to ModelViewerPage from ar.dart
+// AR Viewer Screen - Following the pattern from ar.dart
 class _ARViewerScreen extends StatefulWidget {
   final String arModelUrl;
   final String productName;
@@ -204,36 +204,12 @@ class _ARViewerScreen extends StatefulWidget {
 }
 
 class _ARViewerScreenState extends State<_ARViewerScreen> {
-  Future<void> _validateModelUrl() async {
-    try {
-      // Basic URL validation
-      if (widget.arModelUrl.isEmpty) {
-        throw Exception('AR model URL is empty');
-      }
-
-      // Check if URL is properly formatted
-      final uri = Uri.tryParse(widget.arModelUrl);
-      if (uri == null || (!uri.hasScheme || !uri.hasAuthority)) {
-        throw Exception('Invalid AR model URL format');
-      }
-
-      // Additional validation could be added here
-      // For now, we'll assume the URL is valid if it passes basic checks
-      print('AR Model URL validated: ${widget.arModelUrl}');
-    } catch (e) {
-      print('AR Model URL validation failed: $e');
-      throw e;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Add debug information
-    print('Building AR Viewer with URL: ${widget.arModelUrl}');
-    print('Product name: ${widget.productName}');
-
     return Scaffold(
       backgroundColor: Colors.grey[100],
+
+      // App Bar (following ar.dart pattern)
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -285,9 +261,10 @@ class _ARViewerScreenState extends State<_ARViewerScreen> {
           ),
         ],
       ),
+
       body: Column(
         children: [
-          // 3D Model Viewer Container
+          // 3D Model Viewer Container (following ar.dart pattern)
           Expanded(
             child: Container(
               margin: const EdgeInsets.all(16),
@@ -296,7 +273,7 @@ class _ARViewerScreenState extends State<_ARViewerScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -304,148 +281,100 @@ class _ARViewerScreenState extends State<_ARViewerScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: FutureBuilder<void>(
-                  future: _validateModelUrl(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              size: 64,
-                              color: Colors.red,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'AR Model Not Available',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[800],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'The 3D model could not be loaded.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return ModelViewer(
+                child: Stack(
+                  children: [
+                    // ModelViewer Widget - Following ar.dart configuration
+                    ModelViewer(
                       // Background Color
                       backgroundColor: const Color.fromARGB(255, 245, 245, 245),
-                      // Model Source Path - Use complete URL
+                      // Model Source Path - Use the URL directly
                       src: widget.arModelUrl,
                       alt: widget.productName,
-                      // AR Support Configuration
+                      // AR Support Configuration with Scale
                       ar: true,
-                      arModes: const ['scene-viewer', 'quick-look'],
+                      arModes: const ['scene-viewer'],
                       // AR Placement Configuration
                       arPlacement: ArPlacement.floor,
-                      // Basic Camera Controls
-                      cameraControls: true,
+                      // Automatic Model Rotation
                       autoRotate: true,
+                      // Interactive Camera Controls
+                      cameraControls: true,
                       disableZoom: false,
-                      // Simplified camera settings
+                      // Camera Positioning & View Settings
                       cameraOrbit: '0deg 75deg 105%',
                       fieldOfView: '30deg',
-                      // iOS AR configuration
-                      iosSrc: widget.arModelUrl,
-                      // Loading behavior
-                      loading: Loading.lazy,
-                      // Basic interaction
-                      interactionPrompt: InteractionPrompt.auto,
+                      minFieldOfView: '10deg',
+                      maxFieldOfView: '90deg',
+                      minCameraOrbit: 'auto auto 1%',
+                      maxCameraOrbit: 'auto auto 1000%',
+                      // Animation Control
+                      autoPlay: false,
+                      // User Interaction Guidance
+                      interactionPrompt: InteractionPrompt.whenFocused,
                       interactionPromptStyle: InteractionPromptStyle.basic,
-                    );
-                  },
+                      // iOS AR Quick Look Configuration
+                      iosSrc: widget.arModelUrl,
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          // Information Panel
+
+          // Information Panel (following ar.dart pattern)
           Container(
             width: double.infinity,
+            constraints: const BoxConstraints(
+              maxHeight: 150,
+            ),
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  widget.productName,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Experience this product in augmented reality',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.blue.withOpacity(0.2),
-                      width: 1,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Product Title Display
+                  Text(
+                    widget.productName,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                  child: Row(
+                  const SizedBox(height: 8),
+                  // Product Description Display
+                  Text(
+                    'Experience this product in augmented reality',
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 16),
+                  // User Interaction Instructions with AR Preparation
+                  Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.view_in_ar,
                         size: 18,
-                        color: Colors.blue[700],
+                        color: Colors.deepPurple,
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'AR Instructions',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.blue,
-                              ),
-                            ),
-                            Text(
-                              'Drag to rotate • Pinch to zoom • Tap AR button for real-world view',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ],
+                      Expanded(
+                        child: Text(
+                          'Drag to rotate • Pinch to zoom • Tap AR button for real-world view',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
