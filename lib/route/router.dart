@@ -88,6 +88,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => const PasswordRecoveryScreen(),
       );
+
     // case verificationMethodScreenRoute:
     //   return MaterialPageRoute(
     //     builder: (context) => const VerificationMethodScreen(),
@@ -128,12 +129,12 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   return MaterialPageRoute(
     //     builder: (context) => const SetupFaceIdScreen(),
     //   );
-   // In lib/route/router.dart, update the product details route:
-   case productDetailsScreenRoute:
-     return MaterialPageRoute(
-       builder: (context) => const ProductDetailsScreen(),
-       settings: settings, // This preserves the route arguments (product ID)
-     );
+    // In lib/route/router.dart, update the product details route:
+    case productDetailsScreenRoute:
+      return MaterialPageRoute(
+        builder: (context) => const ProductDetailsScreen(),
+        settings: settings, // This preserves the route arguments (product ID)
+      );
     case productReviewsScreenRoute:
       return MaterialPageRoute(
         builder: (context) => const ProductReviewsScreen(),
@@ -226,6 +227,9 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => const NotificationOptionsScreen(),
       );
+
+    case chatScreenRoute:
+      return MaterialPageRoute(builder: (_) => const HomeBotPage());
     // case selectLanguageScreenRoute:
     //   return MaterialPageRoute(
     //     builder: (context) => const SelectLanguageScreen(),

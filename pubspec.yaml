@@ -23,6 +23,9 @@ dependencies:
   shimmer: ^2.0.0
   shared_preferences: ^2.5.3
   http: ^1.4.0
+  dash_chat_2: ^0.0.21
+  chat_gpt_sdk: ^3.1.5
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
