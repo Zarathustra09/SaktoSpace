@@ -24,7 +24,7 @@
 **/doc/api/
 .dart_tool/
 .flutter-plugins
-.flutter-plugins-dependencies
+flutter-plugins-dependencies
 .packages
 .pub-cache/
 .pub/
@@ -42,3 +42,4 @@ app.*.map.json
 
 # Exceptions to above rules.
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+

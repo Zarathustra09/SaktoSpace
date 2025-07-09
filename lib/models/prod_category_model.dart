@@ -1,4 +1,6 @@
 // lib/models/prod_category_model.dart
+import 'package:shop/models/prod_product_model.dart';
+
 class ProdCategoryModel {
   final int id;
   final String name;
@@ -6,6 +8,7 @@ class ProdCategoryModel {
   final String? type;
   final String? createdAt;
   final String? updatedAt;
+  final List<ProdProductModel>? products;
 
   ProdCategoryModel({
     required this.id,
@@ -14,6 +17,7 @@ class ProdCategoryModel {
     this.type,
     this.createdAt,
     this.updatedAt,
+    this.products,
   });
 
   factory ProdCategoryModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +28,11 @@ class ProdCategoryModel {
       type: json['type'],
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
+      products: json['products'] != null
+          ? (json['products'] as List)
+              .map((product) => ProdProductModel.fromJson(product))
+              .toList()
+          : null,
     );
   }
 }

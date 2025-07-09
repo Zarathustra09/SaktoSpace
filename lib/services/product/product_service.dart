@@ -76,4 +76,60 @@ class ProductService {
       throw Exception('Error fetching product: $e');
     }
   }
+
+
+  // Add this method to lib/services/product/product_service.dart
+  Future<List<ProdProductModel>> searchProducts({
+    required String query,
+    int? categoryId,
+    int limit = 20,
+  }) async {
+    try {
+      final headers = await _authService.getHeaders();
+
+      // Build query parameters
+      final queryParams = {
+        'query': query,
+        'limit': limit.toString(),
+        if (categoryId != null) 'category_id': categoryId.toString(),
+      };
+
+      final uri = Uri.parse('$baseUrl/products/search').replace(
+        queryParameters: queryParams,
+      );
+
+      print("Making search API request to: $uri");
+      print("Using headers: $headers");
+
+      final response = await http.get(uri, headers: headers);
+
+      print("Search response status code: ${response.statusCode}");
+      print("Search response body (first 100 chars): ${response.body.length > 100 ? response.body.substring(0, 100) : response.body}");
+
+      if (response.statusCode == 200) {
+        if (response.body.isEmpty) {
+          throw Exception('Empty response from server');
+        }
+
+        try {
+          final Map<String, dynamic> responseData = json.decode(response.body);
+          if (responseData['success'] == true && responseData['data'] != null) {
+            final List<dynamic> data = responseData['data'];
+            return data.map((item) => ProdProductModel.fromJson(item)).toList();
+          } else {
+            throw Exception('Invalid search response structure: ${response.body}');
+          }
+        } catch (parseError) {
+          print("JSON parsing error: $parseError");
+          print("Response body: ${response.body}");
+          throw Exception('Failed to parse search response: $parseError');
+        }
+      } else {
+        throw Exception('Failed to search products: ${response.statusCode}, Body: ${response.body}');
+      }
+    } catch (e) {
+      print("Error in searchProducts: $e");
+      throw Exception('Error searching products: $e');
+    }
+  }
 }
