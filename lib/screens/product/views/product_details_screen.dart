@@ -61,30 +61,41 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
             final product = snapshot.data!;
             final bool isProductAvailable = product.stock > 0;
-            final List<String> productImages = [
-              getFullImageUrl(product.image)
-            ];
+            final List<String> productImages = [getFullImageUrl(product.image)];
             // If the product has AR model URL, add it to the images list
             if (product.arModelUrl != null && product.arModelUrl!.isNotEmpty) {
               productImages.add(getFullImageUrl(product.arModelUrl!));
             }
 
+            // Get the full AR model URL for the AR viewer
+            final String? fullArModelUrl =
+                product.arModelUrl != null && product.arModelUrl!.isNotEmpty
+                    ? getFullImageUrl(product.arModelUrl!)
+                    : null;
+
+            // Debug output
+            print('=== PRODUCT DETAILS DEBUG ===');
+            print('Product name: ${product.name}');
+            print('Raw AR model URL: ${product.arModelUrl}');
+            print('Full AR model URL: $fullArModelUrl');
+            print('Storage URL: $storageUrl');
+
             return Scaffold(
               bottomNavigationBar: isProductAvailable
-                ? CartButton(
-                    price: product.price,
-                    press: () {
-                      customModalBottomSheet(
-                        context,
-                        height: MediaQuery.of(context).size.height * 0.92,
-                        child: const ProductBuyNowScreen(),
-                      );
-                    },
-                  )
-                : NotifyMeCard(
-                    isNotify: false,
-                    onChanged: (value) {},
-                  ),
+                  ? CartButton(
+                      price: product.price,
+                      press: () {
+                        customModalBottomSheet(
+                          context,
+                          height: MediaQuery.of(context).size.height * 0.92,
+                          child: const ProductBuyNowScreen(),
+                        );
+                      },
+                    )
+                  : NotifyMeCard(
+                      isNotify: false,
+                      onChanged: (value) {},
+                    ),
               body: CustomScrollView(
                 slivers: [
                   SliverAppBar(
@@ -93,15 +104,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     actions: [
                       IconButton(
                         onPressed: () {},
-                        icon: SvgPicture.asset(
-                          "assets/icons/Bookmark.svg",
-                          color: Theme.of(context).textTheme.bodyLarge!.color
-                        ),
+                        icon: SvgPicture.asset("assets/icons/Bookmark.svg",
+                            color:
+                                Theme.of(context).textTheme.bodyLarge!.color),
                       ),
                     ],
                   ),
                   ProductImages(
                     images: productImages,
+                    arModelUrl: fullArModelUrl,
+                    productName: product.name,
                   ),
                   ProductInfo(
                     brand: product.category?.name ?? "Unknown",
@@ -109,7 +121,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     isAvailable: isProductAvailable,
                     description: product.description,
                     rating: 4.4, // Placeholder as rating is not in the model
-                    numOfReviews: 126, // Placeholder as reviews are not in the model
+                    numOfReviews:
+                        126, // Placeholder as reviews are not in the model
                   ),
                   ProductListTile(
                     svgSrc: "assets/icons/Product.svg",
@@ -119,8 +132,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         context,
                         height: MediaQuery.of(context).size.height * 0.92,
                         child: const BuyFullKit(
-                          images: ["assets/screens/Product detail.png"]
-                        ),
+                            images: ["assets/screens/Product detail.png"]),
                       );
                     },
                   ),
@@ -184,7 +196,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     child: FutureBuilder<List<ProdProductModel>>(
                       future: _productService.getAllProducts(),
                       builder: (context, relatedSnapshot) {
-                        if (relatedSnapshot.connectionState == ConnectionState.waiting ||
+                        if (relatedSnapshot.connectionState ==
+                                ConnectionState.waiting ||
                             relatedSnapshot.hasError ||
                             !relatedSnapshot.hasData) {
                           return const SizedBox(
@@ -207,18 +220,20 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               padding: EdgeInsets.only(
                                   left: defaultPadding,
                                   right: index == relatedProducts.length - 1
-                                      ? defaultPadding : 0),
+                                      ? defaultPadding
+                                      : 0),
                               child: ProductCard(
-                                image: getFullImageUrl(relatedProducts[index].image),
+                                image: getFullImageUrl(
+                                    relatedProducts[index].image),
                                 title: relatedProducts[index].name,
-                                brandName: relatedProducts[index].category?.name ?? "Unknown",
+                                brandName:
+                                    relatedProducts[index].category?.name ??
+                                        "Unknown",
                                 price: relatedProducts[index].price,
                                 press: () {
                                   Navigator.pushReplacementNamed(
-                                    context,
-                                    productDetailsScreenRoute,
-                                    arguments: relatedProducts[index].id
-                                  );
+                                      context, productDetailsScreenRoute,
+                                      arguments: relatedProducts[index].id);
                                 },
                               ),
                             ),
