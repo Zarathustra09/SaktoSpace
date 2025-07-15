@@ -35,6 +35,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+dependency_overrides:
+  path: ^1.9.1
+
   flutter_lints: ^4.0.0
 
 flutter:
