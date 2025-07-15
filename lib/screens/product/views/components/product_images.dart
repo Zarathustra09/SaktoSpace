@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import '/components/network_image_with_loader.dart';
+import 'dart:io';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../constants.dart';
 
@@ -72,7 +74,7 @@ class _ProductImagesState extends State<ProductImages> {
                 ),
               ),
             ),
-            // AR Button positioned at bottom left
+            // AR Button positioned at bottom left - now launches native AR camera directly
             if (widget.arModelUrl != null &&
                 widget.arModelUrl!.isNotEmpty &&
                 _isValidUrl(widget.arModelUrl!))
@@ -94,7 +96,7 @@ class _ProductImagesState extends State<ProductImages> {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () => _showARViewer(context),
+                      onTap: () => _launchARCamera(context),
                       borderRadius: const BorderRadius.all(Radius.circular(12)),
                       child: const Padding(
                         padding:
@@ -163,12 +165,11 @@ class _ProductImagesState extends State<ProductImages> {
     );
   }
 
-  void _showARViewer(BuildContext context) {
-    print('=== AR VIEWER DEBUG ===');
+  void _launchARCamera(BuildContext context) async {
+    print('=== NATIVE AR LAUNCH DEBUG ===');
     print('AR Model URL: ${widget.arModelUrl}');
     print('Product Name: ${widget.productName}');
-    print(
-        'URL is valid: ${widget.arModelUrl != null ? _isValidUrl(widget.arModelUrl!) : false}');
+    print('Platform: ${Platform.operatingSystem}');
 
     if (widget.arModelUrl == null || widget.arModelUrl!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -177,203 +178,228 @@ class _ProductImagesState extends State<ProductImages> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => _ARViewerScreen(
+    try {
+      bool launched = false;
+
+      if (Platform.isIOS) {
+        print('Launching iOS Quick Look AR...');
+        // iOS Quick Look - launches native AR camera
+        final quickLookUrl = Uri.parse(widget.arModelUrl!);
+        launched = await launchUrl(
+          quickLookUrl,
+          mode: LaunchMode.externalApplication, // Forces native AR app
+        );
+        print('iOS AR launch result: $launched');
+      } else if (Platform.isAndroid) {
+        print('Launching Android Scene Viewer...');
+        // Google Scene Viewer - launches native AR camera
+        final sceneViewerUrl = Uri.parse(
+            'https://arvr.google.com/scene-viewer/1.0?file=${Uri.encodeComponent(widget.arModelUrl!)}&mode=ar_preferred');
+        launched = await launchUrl(
+          sceneViewerUrl,
+          mode: LaunchMode.externalApplication,
+        );
+        print('Android AR launch result: $launched');
+      } else {
+        print('Platform not supported for native AR');
+        launched = false;
+      }
+
+      if (!launched) {
+        // Fallback to in-app AR if native launch fails
+        print('Native AR launch failed, falling back to in-app AR');
+        _showInAppAR(context);
+      } else {
+        print('Native AR launched successfully');
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                    'AR Camera launched for ${widget.productName ?? "product"}'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error launching AR: $e');
+      // Fallback to in-app AR if native launch fails
+      _showInAppAR(context);
+    }
+  }
+
+  void _showInAppAR(BuildContext context) {
+    print('Showing fallback in-app AR viewer');
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (context) => Dialog.fullscreen(
+        child: _FallbackARViewer(
           arModelUrl: widget.arModelUrl!,
           productName: widget.productName ?? 'Product',
+          onRetryNativeAR: () =>
+              _launchARCamera(context), // Pass the retry callback
         ),
       ),
     );
   }
 }
 
-// AR Viewer Screen - Following the pattern from ar.dart
-class _ARViewerScreen extends StatefulWidget {
+// Fallback AR Viewer for when native AR launch fails
+class _FallbackARViewer extends StatelessWidget {
   final String arModelUrl;
   final String productName;
+  final VoidCallback? onRetryNativeAR; // Add this parameter
 
-  const _ARViewerScreen({
+  const _FallbackARViewer({
     required this.arModelUrl,
     required this.productName,
+    this.onRetryNativeAR, // Add this parameter
   });
 
   @override
-  State<_ARViewerScreen> createState() => _ARViewerScreenState();
-}
-
-class _ARViewerScreenState extends State<_ARViewerScreen> {
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-
-      // App Bar (following ar.dart pattern)
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          widget.productName,
-          style: const TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline, color: Colors.black87),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text(widget.productName),
-                  content: const Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                          'View this product in augmented reality to see how it looks in your space.'),
-                      SizedBox(height: 12),
-                      Text(
-                        'Instructions:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text('• Tap the AR button to enter AR mode'),
-                      Text('• Point your camera at a flat surface'),
-                      Text('• Drag to rotate • Pinch to zoom'),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Got it'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-
-      body: Column(
+      backgroundColor: Colors.black,
+      body: Stack(
         children: [
-          // 3D Model Viewer Container (following ar.dart pattern)
-          Expanded(
+          // ModelViewer configured for AR
+          ModelViewer(
+            backgroundColor: const Color.fromARGB(0, 0, 0, 0),
+            src: arModelUrl,
+            alt: productName,
+
+            // Force AR mode
+            ar: true,
+            arModes: const ['scene-viewer', 'webxr', 'quick-look'],
+            arPlacement: ArPlacement.floor,
+
+            // Auto-launch AR when possible
+            autoPlay: true,
+            loading: Loading.eager,
+
+            // Minimal 3D controls to encourage AR use
+            cameraControls: true,
+            autoRotate: false,
+
+            // iOS Quick Look
+            iosSrc: arModelUrl,
+
+            // Interaction settings
+            interactionPrompt: InteractionPrompt.whenFocused,
+            interactionPromptStyle: InteractionPromptStyle.wiggle,
+            interactionPromptThreshold: 3000,
+          ),
+
+          // Top controls
+          Positioned(
+            top: MediaQuery.of(context).padding.top,
+            left: 0,
+            right: 0,
             child: Container(
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.info_outline,
+                            color: Colors.orange, size: 16),
+                        const SizedBox(width: 4),
+                        const Text(
+                          'Fallback AR - ',
+                          style: TextStyle(color: Colors.orange, fontSize: 12),
+                        ),
+                        Text(
+                          productName,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 12),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Stack(
-                  children: [
-                    // ModelViewer Widget - Following ar.dart configuration
-                    ModelViewer(
-                      // Background Color
-                      backgroundColor: const Color.fromARGB(255, 245, 245, 245),
-                      // Model Source Path - Use the URL directly
-                      src: widget.arModelUrl,
-                      alt: widget.productName,
-                      // AR Support Configuration with Scale
-                      ar: true,
-                      arModes: const ['scene-viewer'],
-                      // AR Placement Configuration
-                      arPlacement: ArPlacement.floor,
-                      // Automatic Model Rotation
-                      autoRotate: true,
-                      // Interactive Camera Controls
-                      cameraControls: true,
-                      disableZoom: false,
-                      // Camera Positioning & View Settings
-                      cameraOrbit: '0deg 75deg 105%',
-                      fieldOfView: '30deg',
-                      minFieldOfView: '10deg',
-                      maxFieldOfView: '90deg',
-                      minCameraOrbit: 'auto auto 1%',
-                      maxCameraOrbit: 'auto auto 1000%',
-                      // Animation Control
-                      autoPlay: false,
-                      // User Interaction Guidance
-                      interactionPrompt: InteractionPrompt.whenFocused,
-                      interactionPromptStyle: InteractionPromptStyle.basic,
-                      // iOS AR Quick Look Configuration
-                      iosSrc: widget.arModelUrl,
-                    ),
-                  ],
-                ),
-              ),
             ),
           ),
 
-          // Information Panel (following ar.dart pattern)
-          Container(
-            width: double.infinity,
-            constraints: const BoxConstraints(
-              maxHeight: 150,
-            ),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: SingleChildScrollView(
+          // AR Instructions overlay
+          Positioned(
+            bottom: 120,
+            left: 20,
+            right: 20,
+            child: Container(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              decoration: BoxDecoration(
+                color: Colors.black87,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Product Title Display
+                  Icon(Icons.camera_alt, color: Colors.white, size: 32),
+                  SizedBox(height: 8),
                   Text(
-                    widget.productName,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+                    'Look for the AR button to view in your space',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
-                  // Product Description Display
+                  SizedBox(height: 4),
                   Text(
-                    'Experience this product in augmented reality',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 16),
-                  // User Interaction Instructions with AR Preparation
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.view_in_ar,
-                        size: 18,
-                        color: Colors.deepPurple,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Drag to rotate • Pinch to zoom • Tap AR button for real-world view',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                    ],
+                    'Native AR launch failed - using fallback viewer',
+                    style: TextStyle(color: Colors.orange, fontSize: 12),
+                    textAlign: TextAlign.center,
                   ),
                 ],
+              ),
+            ),
+          ),
+
+          // Try native AR again button - Fixed version
+          Positioned(
+            bottom: 40,
+            left: 20,
+            right: 20,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                // Call the retry callback if provided
+                if (onRetryNativeAR != null) {
+                  onRetryNativeAR!();
+                }
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Native AR Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
