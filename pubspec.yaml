@@ -26,10 +26,14 @@ dependencies:
   dash_chat_2: ^0.0.21
   chat_gpt_sdk: ^3.1.5
   flutter_dotenv: ^5.1.0
+  model_viewer_plus: ^1.9.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+dependency_overrides:
+  path: ^1.9.1
 
   flutter_lints: ^4.0.0
 
