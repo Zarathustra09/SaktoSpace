@@ -10,7 +10,6 @@ class ProductService {
 
   Future<List<ProdProductModel>> getAllProducts() async {
     try {
-      // Get authentication headers that include the bearer token
       final headers = await _authService.getHeaders();
 
       print("Making API request to: $baseUrl/products");
@@ -29,11 +28,14 @@ class ProductService {
           throw Exception('Empty response from server');
         }
 
-        // Try to decode JSON
         try {
           final Map<String, dynamic> responseData = json.decode(response.body);
           if (responseData['success'] == true && responseData['data'] != null) {
             final List<dynamic> data = responseData['data'];
+            // Print each product's name and image URL
+            for (var item in data) {
+              print("Product: ${item['name']}, Image URL: ${item['image']}");
+            }
             return data.map((item) => ProdProductModel.fromJson(item)).toList();
           } else {
             throw Exception('Invalid response structure: ${response.body}');

@@ -8,6 +8,7 @@ import 'package:shop/constants.dart';
 import 'package:shop/models/prod_product_model.dart';
 import 'package:shop/screens/product/views/product_returns_screen.dart';
 import 'package:shop/services/product/product_service.dart';
+import 'package:shop/services/cart/cart_service.dart';
 
 import 'package:shop/route/screen_export.dart';
 
@@ -27,6 +28,7 @@ class ProductDetailsScreen extends StatefulWidget {
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   final ProductService _productService = ProductService();
+  final CartService _cartService = CartService();
   late Future<ProdProductModel> _productFuture;
   int? productId;
 
@@ -103,10 +105,24 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     floating: true,
                     actions: [
                       IconButton(
-                        onPressed: () {},
-                        icon: SvgPicture.asset("assets/icons/Bookmark.svg",
-                            color:
-                                Theme.of(context).textTheme.bodyLarge!.color),
+                        onPressed: () async {
+                          if (productId != null) {
+                            try {
+                              final result = await _cartService.addToCart(productId: productId!, quantity: 1);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(result['message'] ?? 'Added to cart!')),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error: ${e.toString()}')),
+                              );
+                            }
+                          }
+                        },
+                        icon: SvgPicture.asset(
+                          "assets/icons/Bookmark.svg",
+                          color: Theme.of(context).textTheme.bodyLarge!.color,
+                        ),
                       ),
                     ],
                   ),
