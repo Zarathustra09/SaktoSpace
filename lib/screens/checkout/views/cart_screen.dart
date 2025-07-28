@@ -126,7 +126,7 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(),
+        // leading: BackButton(),
         title: const Text('Cart'),
         centerTitle: true,
         elevation: 0,
