@@ -1,3 +1,7 @@
+// Add this line to your screen_export.dart file
+export '/screens/checkout/views/checkout_screen.dart';
+
+// Your existing exports remain the same:
 export '/screens/onbording/views/onbording_screnn.dart';
 export '/screens/auth/views/login_screen.dart';
 export '/screens/auth/views/password_recovery_screen.dart';
@@ -14,7 +18,7 @@ export '/screens/product/views/product_details_screen.dart';
 export '/screens/reviews/view/product_reviews_screen.dart';
 export '/screens/search/views/search_screen.dart';
 export '/screens/address/views/addresses_screen.dart';
-export '/screens/checkout/views/cart_screen.dart';
+export '/screens/cart/views/cart_screen.dart';
 
 export '/screens/notification/view/enable_notification_screen.dart';
 export '/screens/notification/view/no_notification_screen.dart';
@@ -28,3 +32,5 @@ export '/screens/profile/views/profile_screen.dart';
 export '/screens/user_info/views/user_info_screen.dart';
 
 export '/screens/chat/views/home_bot_page.dart';
+
+export '/screens/checkout/views/checkout_screen.dart';

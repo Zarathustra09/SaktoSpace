@@ -59,3 +59,8 @@ const String addNewCardScreenRoute = "add_new_card";
 const String thanksForOrderScreenRoute = "thanks_order";
 
 const String homeBotScreenRoute = 'home_bot';
+
+
+
+
+const String checkoutScreenRoute = "checkout";
