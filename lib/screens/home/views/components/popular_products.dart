@@ -7,8 +7,10 @@ import 'package:shop/services/product/product_service.dart';
 import '../../../../constants.dart';
 
 class PopularProducts extends StatefulWidget {
+  final int? categoryId;
   const PopularProducts({
     super.key,
+    this.categoryId,
   });
 
   @override
@@ -22,7 +24,24 @@ class _PopularProductsState extends State<PopularProducts> {
   @override
   void initState() {
     super.initState();
-    _productsFuture = _productService.getAllProducts();
+    _fetchProducts();
+  }
+
+  @override
+  void didUpdateWidget(covariant PopularProducts oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.categoryId != widget.categoryId) {
+      _fetchProducts();
+    }
+  }
+
+  void _fetchProducts() {
+    if (widget.categoryId != null) {
+      _productsFuture = _productService.getAllProducts(categoryId: widget.categoryId);
+    } else {
+      _productsFuture = _productService.getAllProducts();
+    }
+    setState(() {});
   }
 
   @override

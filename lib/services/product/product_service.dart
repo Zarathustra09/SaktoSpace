@@ -8,49 +8,49 @@ import '../../constants.dart';
 class ProductService {
   final AuthService _authService = AuthService();
 
-  Future<List<ProdProductModel>> getAllProducts() async {
+  Future<List<ProdProductModel>> getAllProducts({int? categoryId}) async {
     try {
       final headers = await _authService.getHeaders();
-
-      print("Making API request to: $baseUrl/products");
+      Uri uri;
+      if (categoryId != null) {
+        uri = Uri.parse('$baseUrl/products').replace(queryParameters: {'category_id': categoryId.toString()});
+      } else {
+        uri = Uri.parse('$baseUrl/products');
+      }
+      print("Making API request to: $uri");
       print("Using headers: $headers");
-
       final response = await http.get(
-        Uri.parse('$baseUrl/products'),
+        uri,
         headers: headers,
       );
-
-      print("Response status code: ${response.statusCode}");
-      print("Response body (first 100 chars): ${response.body.length > 100 ? response.body.substring(0, 100) : response.body}");
-
+      print("Response status code: \\${response.statusCode}");
+      print("Response body (first 100 chars): \\${response.body.length > 100 ? response.body.substring(0, 100) : response.body}");
       if (response.statusCode == 200) {
         if (response.body.isEmpty) {
           throw Exception('Empty response from server');
         }
-
         try {
           final Map<String, dynamic> responseData = json.decode(response.body);
           if (responseData['success'] == true && responseData['data'] != null) {
             final List<dynamic> data = responseData['data'];
-            // Print each product's name and image URL
             for (var item in data) {
-              print("Product: ${item['name']}, Image URL: ${item['image']}");
+              print("Product: \\${item['name']}, Image URL: \\${item['image']}");
             }
             return data.map((item) => ProdProductModel.fromJson(item)).toList();
           } else {
-            throw Exception('Invalid response structure: ${response.body}');
+            throw Exception('Invalid response structure: \\${response.body}');
           }
         } catch (parseError) {
-          print("JSON parsing error: $parseError");
-          print("Response body: ${response.body}");
-          throw Exception('Failed to parse response: $parseError');
+          print("JSON parsing error: \\${parseError}");
+          print("Response body: \\${response.body}");
+          throw Exception('Failed to parse response: \\${parseError}');
         }
       } else {
-        throw Exception('Failed to load products: ${response.statusCode}, Body: ${response.body}');
+        throw Exception('Failed to load products: \\${response.statusCode}, Body: \\${response.body}');
       }
     } catch (e) {
-      print("Error in getAllProducts: $e");
-      throw Exception('Error fetching products: $e');
+      print("Error in getAllProducts: \\${e}");
+      throw Exception('Error fetching products: \\${e}');
     }
   }
 

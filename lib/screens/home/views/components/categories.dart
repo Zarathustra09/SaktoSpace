@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shop/route/screen_export.dart';
+import 'package:shop/services/category/category_service.dart';
+import 'package:shop/models/prod_category_model.dart';
 
 import '../../../../constants.dart';
 
@@ -45,36 +47,72 @@ List<CategoryModel> demoCategories = [
   ),
 ];
 
-class Categories extends StatelessWidget {
-  const Categories({super.key});
+class Categories extends StatefulWidget {
+  final int? selectedCategoryId;
+  final ValueChanged<ProdCategoryModel>? onCategorySelected;
+  const Categories({super.key, this.selectedCategoryId, this.onCategorySelected});
+
+  @override
+  State<Categories> createState() => _CategoriesState();
+}
+
+class _CategoriesState extends State<Categories> {
+  late Future<List<ProdCategoryModel>> _categoriesFuture;
+  final CategoryService _categoryService = CategoryService();
+  int? _selectedIndex;
+  List<ProdCategoryModel> _categories = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _categoriesFuture = _categoryService.getAllCategories();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          ...List.generate(
-            demoCategories.length,
-            (index) => Padding(
-              padding: EdgeInsets.only(
-                left: index == 0 ? defaultPadding : defaultPadding / 2,
-                right: index == demoCategories.length - 1 ? defaultPadding : 0,
+    return FutureBuilder<List<ProdCategoryModel>>(
+      future: _categoriesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Failed to load categories'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No categories found'));
+        }
+        _categories = snapshot.data!;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              ...List.generate(
+                _categories.length,
+                (index) => Padding(
+                  padding: EdgeInsets.only(
+                    left: index == 0 ? defaultPadding : defaultPadding / 2,
+                    right: index == _categories.length - 1 ? defaultPadding : 0,
+                  ),
+                  child: CategoryBtn(
+                    category: _categories[index].name ?? '',
+                    svgSrc: null, // You can map icons if available in your model
+                    isActive: widget.selectedCategoryId == null
+                        ? index == 0
+                        : _categories[index].id == widget.selectedCategoryId,
+                    press: () {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                      if (widget.onCategorySelected != null) {
+                        widget.onCategorySelected!(_categories[index]);
+                      }
+                    },
+                  ),
+                ),
               ),
-              child: CategoryBtn(
-                category: demoCategories[index].name,
-                svgSrc: demoCategories[index].svgSrc,
-                isActive: index == 0,
-                press: () {
-                  if (demoCategories[index].route != null) {
-                    Navigator.pushNamed(context, demoCategories[index].route!);
-                  }
-                },
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
