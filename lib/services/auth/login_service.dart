@@ -5,7 +5,7 @@ import '../../constants.dart';
 
 class AuthService {
 
-Future<String> login(String email, String password) async {
+  Future<String> login(String email, String password) async {
     final url = '$baseUrl/login?email=$email&password=$password';
 
     print('Login request URL: $url');
@@ -43,21 +43,37 @@ Future<String> login(String email, String password) async {
     }
   }
 
-  Future<Map<String, String>> getHeaders() async {
-    // print('Fetching headers');
+  Future<String?> getAuthToken() async {
+    print('Getting auth token from SharedPreferences');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('authToken');
+    print('Retrieved token: ${token != null ? "EXISTS" : "NULL"}');
+    return token;
+  }
 
-    if (token == null) {
-      print('No token found');
-      throw Exception('No token found');
-    }
+  Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('userId');
+  }
 
-    // print('Token found: $token');
-    return {
+  Future<bool> isLoggedIn() async {
+    final token = await getAuthToken();
+    return token != null;
+  }
+
+  Future<Map<String, String>> getHeaders() async {
+    print('=== GETTING AUTH HEADERS ===');
+    final token = await getAuthToken();
+    print('Retrieved token: ${token != null ? "TOKEN_EXISTS" : "NO_TOKEN"}');
+
+    final headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
     };
+
+    print('Generated headers: $headers');
+    return headers;
   }
 
 

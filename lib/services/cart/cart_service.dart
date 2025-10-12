@@ -101,8 +101,16 @@ class CartService {
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to clear cart: ${response.body}');
+    // Accept both 200 (success) and 404 (cart already empty) as valid responses
+    if (response.statusCode != 200 && response.statusCode != 404) {
+      // Try to parse error message from response
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 'Failed to clear cart';
+        throw Exception(errorMessage);
+      } catch (e) {
+        throw Exception('Failed to clear cart: ${response.body}');
+      }
     }
   }
 

@@ -6,11 +6,15 @@ import 'package:shop/services/cart/cart_service.dart';
 class CheckoutScreen extends StatefulWidget {
   final double total;
   final List<dynamic> cartItems;
+  final bool isDirectPurchase;
+  final Map<String, dynamic>? directPurchaseData; // Add this parameter
 
   const CheckoutScreen({
     super.key,
     required this.total,
     required this.cartItems,
+    this.isDirectPurchase = false,
+    this.directPurchaseData, // Add this parameter
   });
 
   @override
@@ -47,10 +51,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _processPayment() async {
+    print('=== PAYMENT PROCESSING STARTED ===');
+    print('Form validation: ${_formKey.currentState?.validate()}');
+
     if (!_formKey.currentState!.validate()) {
+      print('Form validation failed - stopping payment process');
       return;
     }
 
+    print('Setting processing state to true');
     setState(() {
       _isProcessing = true;
     });
@@ -60,35 +69,102 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ? _shippingAddressController.text
           : _billingAddressController.text;
 
-      final result = await _paymentService.processPayment(
-        paymentMethod: _selectedPaymentMethod,
-        billingAddress: billingAddress,
-        shippingAddress: _shippingAddressController.text,
-      );
+      print('=== PAYMENT DATA ===');
+      print('Is Direct Purchase: ${widget.isDirectPurchase}');
+      print('Direct Purchase Data: ${widget.directPurchaseData}');
+      print('Selected Payment Method: $_selectedPaymentMethod');
+      print('Billing Address: $billingAddress');
+      print('Shipping Address: ${_shippingAddressController.text}');
+      print('Total Amount: ${widget.total}');
+
+      Map<String, dynamic> result;
+
+      if (widget.isDirectPurchase && widget.directPurchaseData != null) {
+        print('=== USING DIRECT PAYMENT API ===');
+        print('Product ID: ${widget.directPurchaseData!['productId']}');
+        print('Quantity: ${widget.directPurchaseData!['quantity']}');
+
+        // Use direct payment API for buy now
+        result = await _paymentService.processDirectPayment(
+          productId: widget.directPurchaseData!['productId'],
+          quantity: widget.directPurchaseData!['quantity'],
+          paymentMethod: _selectedPaymentMethod,
+          billingAddress: billingAddress,
+          shippingAddress: _shippingAddressController.text,
+        );
+        print('Direct payment result: $result');
+      } else {
+        print('=== USING CART PAYMENT API ===');
+        // Use cart payment API for cart checkout
+        List<Map<String, dynamic>>? paymentItems;
+        if (widget.isDirectPurchase) {
+          paymentItems = widget.cartItems.map((item) => {
+            'product_id': item['id'],
+            'quantity': item['quantity'],
+            'price': item['price'],
+          }).toList();
+          print('Payment items from cart: $paymentItems');
+        }
+
+        result = await _paymentService.processPayment(
+          paymentMethod: _selectedPaymentMethod,
+          billingAddress: billingAddress,
+          shippingAddress: _shippingAddressController.text,
+          cartItems: paymentItems,
+        );
+        print('Cart payment result: $result');
+      }
+
+      // Only clear cart if this is NOT a direct purchase (i.e., it's from cart)
+      if (!widget.isDirectPurchase) {
+        print('Clearing cart after successful payment...');
+        try {
+          await _cartService.clearCart();
+          print('Cart cleared successfully');
+        } catch (e) {
+          print('Warning: Failed to clear cart after payment: $e');
+        }
+      } else {
+        print('Skipping cart clear for direct purchase');
+      }
 
       if (mounted) {
+        print('Showing success dialog...');
         // Show success dialog
-        _showSuccessDialog(result['data']);
+        _showSuccessDialog(result['data'] ?? result);
+      } else {
+        print('Widget not mounted, skipping success dialog');
       }
     } catch (e) {
+      print('=== PAYMENT ERROR ===');
+      print('Error type: ${e.runtimeType}');
+      print('Error message: $e');
+      print('Stack trace: ${StackTrace.current}');
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Payment failed: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
     } finally {
+      print('Setting processing state to false');
       if (mounted) {
         setState(() {
           _isProcessing = false;
         });
       }
     }
+    print('=== PAYMENT PROCESSING ENDED ===');
   }
 
   void _showSuccessDialog(Map<String, dynamic> paymentData) {
+    final bool isCashOnDelivery = _selectedPaymentMethod == 'cash_on_delivery';
+    final String status = paymentData['status'] ?? 'completed';
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -102,28 +178,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade100,
+                  color: isCashOnDelivery ? Colors.orange.shade100 : Colors.green.shade100,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.check,
-                  color: Colors.green.shade600,
+                  isCashOnDelivery ? Icons.pending : Icons.check,
+                  color: isCashOnDelivery ? Colors.orange.shade600 : Colors.green.shade600,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 12),
-              const Text('Payment Successful'),
+              Text(isCashOnDelivery ? 'Order Placed' : 'Payment Successful'),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Transaction ID: ${paymentData['transaction_id']}'),
+              Text('Transaction ID: ${paymentData['transaction_id'] ?? 'N/A'}'),
               const SizedBox(height: 8),
-              Text('Amount: ₱${paymentData['amount']}'),
+              Text('Amount: ₱${paymentData['amount'] ?? widget.total.toStringAsFixed(2)}'),
               const SizedBox(height: 8),
-              const Text('Your order has been processed successfully!'),
+              Text('Status: ${status.toUpperCase()}'),
+              const SizedBox(height: 8),
+              Text(
+                isCashOnDelivery
+                  ? 'Your order has been placed successfully! Payment will be collected upon delivery.'
+                  : 'Your order has been processed successfully!',
+              ),
             ],
           ),
           actions: [
@@ -356,21 +438,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                 ),
                 child: _isProcessing
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text('Processing...'),
+                        ],
+                      )
                     : Text(
-                  'Pay ₱${widget.total.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                        'Pay ₱${widget.total.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -379,3 +468,4 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 }
+

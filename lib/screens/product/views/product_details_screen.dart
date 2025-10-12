@@ -90,7 +90,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         customModalBottomSheet(
                           context,
                           height: MediaQuery.of(context).size.height * 0.92,
-                          child: const ProductBuyNowScreen(),
+                          child: ProductBuyNowScreen(product: product),
                         );
                       },
                     )
@@ -139,43 +139,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     rating: 4.4, // Placeholder as rating is not in the model
                     numOfReviews:
                         126, // Placeholder as reviews are not in the model
-                  ),
-                  ProductListTile(
-                    svgSrc: "assets/icons/Product.svg",
-                    title: "Product Details",
-                    press: () {
-                      customModalBottomSheet(
-                        context,
-                        height: MediaQuery.of(context).size.height * 0.92,
-                        child: const BuyFullKit(
-                            images: ["assets/screens/Product detail.png"]),
-                      );
-                    },
-                  ),
-                  ProductListTile(
-                    svgSrc: "assets/icons/Delivery.svg",
-                    title: "Shipping Information",
-                    press: () {
-                      customModalBottomSheet(
-                        context,
-                        height: MediaQuery.of(context).size.height * 0.92,
-                        child: const BuyFullKit(
-                          images: ["assets/screens/Shipping information.png"],
-                        ),
-                      );
-                    },
-                  ),
-                  ProductListTile(
-                    svgSrc: "assets/icons/Return.svg",
-                    title: "Returns",
-                    isShowBottomBorder: true,
-                    press: () {
-                      customModalBottomSheet(
-                        context,
-                        height: MediaQuery.of(context).size.height * 0.92,
-                        child: const ProductReturnsScreen(),
-                      );
-                    },
                   ),
                   const SliverToBoxAdapter(
                     child: Padding(
