@@ -9,8 +9,8 @@ import 'package:shop/models/prod_product_model.dart';
 import 'package:shop/screens/product/views/product_returns_screen.dart';
 import 'package:shop/services/product/product_service.dart';
 import 'package:shop/services/cart/cart_service.dart';
-
 import 'package:shop/route/screen_export.dart';
+import 'package:shop/screens/reviews/view/product_reviews_screen.dart'; // ADDED
 
 import 'components/notify_me_card.dart';
 import 'components/product_images.dart';
@@ -29,16 +29,28 @@ class ProductDetailsScreen extends StatefulWidget {
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   final ProductService _productService = ProductService();
   final CartService _cartService = CartService();
-  late Future<ProdProductModel> _productFuture;
+  Future<ProdProductModel>? _productFuture;
   int? productId;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Get the product ID from the route arguments
-    productId = ModalRoute.of(context)?.settings.arguments as int?;
-    if (productId != null) {
-      _productFuture = _productService.getProductById(productId!);
+    final newProductId = ModalRoute.of(context)?.settings.arguments as int?;
+
+    // Only initialize futures if productId has changed or is being set for the first time
+    if (newProductId != null && newProductId != productId) {
+      productId = newProductId;
+      print('Setting up futures for product ID: $productId');
+
+      // Use the regular product service for basic product details
+      _productFuture = _productService.getAllProducts().then((products) {
+        try {
+          return products.firstWhere((product) => product.id == productId);
+        } catch (e) {
+          print('Product with ID $productId not found in products list');
+          throw Exception('Product not found');
+        }
+      });
     }
   }
 
@@ -48,22 +60,72 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if we have a productId and futures initialized
+    if (productId == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Product Details')),
+        body: const Center(child: Text('No product ID provided')),
+      );
+    }
+
+    if (_productFuture == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Product Details')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       body: SafeArea(
         child: FutureBuilder<ProdProductModel>(
-          future: _productFuture,
+          future: _productFuture!,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
+              print('Product details error: ${snapshot.error}');
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    const Text('Error loading product'),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${snapshot.error}',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _productFuture = _productService.getAllProducts().then((products) {
+                            try {
+                              return products.firstWhere((product) => product.id == productId);
+                            } catch (e) {
+                              print('Product with ID $productId not found in products list');
+                              throw Exception('Product not found');
+                            }
+                          });
+                        });
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
             } else if (!snapshot.hasData) {
               return const Center(child: Text('Product not found'));
             }
 
             final product = snapshot.data!;
+            print('Product loaded: ${product.name} (ID: ${product.id})');
+
             final bool isProductAvailable = product.stock > 0;
             final List<String> productImages = [getFullImageUrl(product.image)];
+
             // If the product has AR model URL, add it to the images list
             if (product.arModelUrl != null && product.arModelUrl!.isNotEmpty) {
               productImages.add(getFullImageUrl(product.arModelUrl!));
@@ -74,13 +136,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 product.arModelUrl != null && product.arModelUrl!.isNotEmpty
                     ? getFullImageUrl(product.arModelUrl!)
                     : null;
-
-            // Debug output
-            print('=== PRODUCT DETAILS DEBUG ===');
-            print('Product name: ${product.name}');
-            print('Raw AR model URL: ${product.arModelUrl}');
-            print('Full AR model URL: $fullArModelUrl');
-            print('Storage URL: $storageUrl');
 
             return Scaffold(
               bottomNavigationBar: isProductAvailable
@@ -109,13 +164,17 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           if (productId != null) {
                             try {
                               final result = await _cartService.addToCart(productId: productId!, quantity: 1);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(result['message'] ?? 'Added to cart!')),
-                              );
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(result['message'] ?? 'Added to cart!')),
+                                );
+                              }
                             } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: ${e.toString()}')),
-                              );
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: ${e.toString()}')),
+                                );
+                              }
                             }
                           }
                         },
@@ -136,21 +195,21 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     title: product.name,
                     isAvailable: isProductAvailable,
                     description: product.description,
-                    rating: 4.4, // Placeholder as rating is not in the model
-                    numOfReviews:
-                        126, // Placeholder as reviews are not in the model
+                    rating: product.averageRating ?? 0.0,
+                    numOfReviews: product.totalRatings ?? 0,
                   ),
-                  const SliverToBoxAdapter(
+                  SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.all(defaultPadding),
+                      padding: const EdgeInsets.all(defaultPadding),
                       child: ReviewCard(
-                        rating: 4.3,
-                        numOfReviews: 128,
-                        numOfFiveStar: 80,
-                        numOfFourStar: 30,
-                        numOfThreeStar: 5,
-                        numOfTwoStar: 4,
-                        numOfOneStar: 1,
+                        rating: product.averageRating ?? 0.0,
+                        // Keep non-zero to protect ReviewCard from divide-by-zero if it computes percentages internally
+                        numOfReviews: (product.totalRatings ?? 0) == 0 ? 1 : (product.totalRatings ?? 1),
+                        numOfFiveStar: 0,
+                        numOfFourStar: 0,
+                        numOfThreeStar: 0,
+                        numOfTwoStar: 0,
+                        numOfOneStar: 0,
                       ),
                     ),
                   ),
@@ -159,7 +218,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     title: "Reviews",
                     isShowBottomBorder: true,
                     press: () {
-                      Navigator.pushNamed(context, productReviewsScreenRoute);
+                      final idToPass = product.id;
+                      print('[ProductDetails] Navigating to reviews with productId: $idToPass');
+                      // Push via constructor to guarantee productId is delivered
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProductReviewsScreen(productId: idToPass),
+                        ),
+                      );
                     },
                   ),
                   SliverPadding(
@@ -195,27 +262,33 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             itemCount: relatedProducts.length,
-                            itemBuilder: (context, index) => Padding(
-                              padding: EdgeInsets.only(
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: EdgeInsets.only(
                                   left: defaultPadding,
                                   right: index == relatedProducts.length - 1
                                       ? defaultPadding
-                                      : 0),
-                              child: ProductCard(
-                                image: getFullImageUrl(
-                                    relatedProducts[index].image),
-                                title: relatedProducts[index].name,
-                                brandName:
-                                    relatedProducts[index].category?.name ??
-                                        "Unknown",
-                                price: relatedProducts[index].price,
-                                press: () {
-                                  Navigator.pushReplacementNamed(
-                                      context, productDetailsScreenRoute,
-                                      arguments: relatedProducts[index].id);
-                                },
-                              ),
-                            ),
+                                      : 0,
+                                ),
+                                child: ProductCard(
+                                  image: getFullImageUrl(
+                                      relatedProducts[index].image),
+                                  title: relatedProducts[index].name,
+                                  brandName: relatedProducts[index]
+                                          .category
+                                          ?.name ??
+                                      "Unknown",
+                                  price: relatedProducts[index].price,
+                                  press: () {
+                                    Navigator.pushReplacementNamed(
+                                      context,
+                                      productDetailsScreenRoute,
+                                      arguments: relatedProducts[index].id,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
                           ),
                         );
                       },

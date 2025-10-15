@@ -13,6 +13,9 @@ class ProdProductModel {
   final String? createdAt;
   final String? updatedAt;
   final ProdCategoryModel? category;
+  final double? averageRating;
+  final int? totalRatings;
+  final List<dynamic>? ratings; // Changed to dynamic to avoid circular import
 
   ProdProductModel({
     required this.id,
@@ -26,9 +29,20 @@ class ProdProductModel {
     this.createdAt,
     this.updatedAt,
     this.category,
+    this.averageRating,
+    this.totalRatings,
+    this.ratings,
   });
 
   factory ProdProductModel.fromJson(Map<String, dynamic> json) {
+    // Helper to parse double from dynamic (num or string like "4.0000")
+    double? _parseDouble(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v);
+      return null;
+    }
+
     return ProdProductModel(
       id: json['id'],
       name: json['name'],
@@ -43,6 +57,9 @@ class ProdProductModel {
       category: json['category'] != null
           ? ProdCategoryModel.fromJson(json['category'])
           : null,
+      averageRating: _parseDouble(json['average_rating']),
+      totalRatings: json['total_ratings'],
+      ratings: json['ratings'], // Store as raw data to avoid circular import
     );
   }
 }
