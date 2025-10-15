@@ -42,15 +42,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       productId = newProductId;
       print('Setting up futures for product ID: $productId');
 
-      // Use the regular product service for basic product details
-      _productFuture = _productService.getAllProducts().then((products) {
-        try {
-          return products.firstWhere((product) => product.id == productId);
-        } catch (e) {
-          print('Product with ID $productId not found in products list');
-          throw Exception('Product not found');
-        }
-      });
+      // Load full product details from the show endpoint (includes rating data)
+      _productFuture = _productService.getProductById(productId!);
     }
   }
 
@@ -101,14 +94,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ElevatedButton(
                       onPressed: () {
                         setState(() {
-                          _productFuture = _productService.getAllProducts().then((products) {
-                            try {
-                              return products.firstWhere((product) => product.id == productId);
-                            } catch (e) {
-                              print('Product with ID $productId not found in products list');
-                              throw Exception('Product not found');
-                            }
-                          });
+                          // Retry via show endpoint as well
+                          _productFuture = _productService.getProductById(productId!);
                         });
                       },
                       child: const Text('Retry'),
@@ -136,6 +123,21 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 product.arModelUrl != null && product.arModelUrl!.isNotEmpty
                     ? getFullImageUrl(product.arModelUrl!)
                     : null;
+
+            // Compute safe rating counts and denominator for progress bars
+            final int oneStar = _safeRatingCount(product.ratingBreakdown?['1']);
+            final int twoStar = _safeRatingCount(product.ratingBreakdown?['2']);
+            final int threeStar = _safeRatingCount(product.ratingBreakdown?['3']);
+            final int fourStar = _safeRatingCount(product.ratingBreakdown?['4']);
+            final int fiveStar = _safeRatingCount(product.ratingBreakdown?['5']);
+
+            final int totalFromApi = product.totalRatings ?? 0;
+            final int sumFromBreakdown = oneStar + twoStar + threeStar + fourStar + fiveStar;
+
+            // Pick denominator: prefer breakdown sum when available, else API total, else 1 (but avoid building bars when zero)
+            final int reviewDenominator = sumFromBreakdown > 0
+                ? sumFromBreakdown
+                : (totalFromApi > 0 ? totalFromApi : 1);
 
             return Scaffold(
               bottomNavigationBar: isProductAvailable
@@ -195,22 +197,39 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     title: product.name,
                     isAvailable: isProductAvailable,
                     description: product.description,
+                    // Use API-provided average and total
                     rating: product.averageRating ?? 0.0,
                     numOfReviews: product.totalRatings ?? 0,
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(defaultPadding),
-                      child: ReviewCard(
-                        rating: product.averageRating ?? 0.0,
-                        // Keep non-zero to protect ReviewCard from divide-by-zero if it computes percentages internally
-                        numOfReviews: (product.totalRatings ?? 0) == 0 ? 1 : (product.totalRatings ?? 1),
-                        numOfFiveStar: 0,
-                        numOfFourStar: 0,
-                        numOfThreeStar: 0,
-                        numOfTwoStar: 0,
-                        numOfOneStar: 0,
-                      ),
+                      // If there are zero reviews and zero breakdown, don't build ReviewCard (avoids NaN/Infinity)
+                      child: (totalFromApi == 0 && sumFromBreakdown == 0)
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Reviews",
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "No reviews yet",
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            )
+                          : ReviewCard(
+                              rating: product.averageRating ?? 0.0,
+                              // Use safe denominator so internal % math doesn't divide by zero
+                              numOfReviews: reviewDenominator,
+                              numOfFiveStar: fiveStar,
+                              numOfFourStar: fourStar,
+                              numOfThreeStar: threeStar,
+                              numOfTwoStar: twoStar,
+                              numOfOneStar: oneStar,
+                            ),
                     ),
                   ),
                   ProductListTile(
@@ -304,5 +323,21 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         ),
       ),
     );
+  }
+
+  // Hardened parser: accepts int/double/string; clamps negatives; guards NaN/Infinity
+  int _safeRatingCount(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) {
+      if (value.isNaN || value.isInfinite) return 0;
+      final v = value.toInt();
+      return v < 0 ? 0 : v;
+    }
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed == null) return 0;
+      return parsed < 0 ? 0 : parsed;
+    }
+    return 0;
   }
 }
