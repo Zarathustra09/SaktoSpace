@@ -1,11 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shop/route/route_constants.dart';
 import 'package:shop/route/router.dart' as router;
 import 'package:shop/theme/app_theme.dart';
+import 'package:shop/services/auth/login_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// Top-level function to handle background messages
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print('[Background Handler] Handling a background message: ${message.messageId}');
+  print('[Background Handler] Background message data: ${message.data}');
+
+  // Handle different notification types
+  final notificationType = message.data['type'];
+  switch (notificationType) {
+    case 'announcement':
+      print('[Background Handler] Received announcement notification');
+      break;
+    default:
+      print('[Background Handler] Received unknown notification type: $notificationType');
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
+  // Set the background messaging handler early
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
   final String initialRoute = await _determineInitialRoute();
   runApp(MyApp(initialRoute: initialRoute));
 }
@@ -18,6 +45,16 @@ Future<String> _determineInitialRoute() async {
   print('ROUTE DETERMINATION:');
   print('Token exists: ${token != null}');
   print('isNew value: $isNew');
+
+  // Initialize FCM early if user is logged in
+  if (token != null) {
+    try {
+      await AuthService.initializeFCM();
+      print('FCM initialized for logged in user');
+    } catch (e) {
+      print('FCM initialization error: $e');
+    }
+  }
 
   if (token != null) {
     print('Route decision: Going to entryPointScreenRoute (has token)');
