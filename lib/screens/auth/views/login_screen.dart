@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shop/constants.dart';
 import 'package:shop/route/route_constants.dart';
 import 'package:shop/services/auth/login_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'components/login_form.dart';
 
@@ -17,6 +18,17 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   bool _isLoading = false;
   String? _errorMessage;
+
+  // new helper to open the password reset URL
+  Future<void> _openPasswordReset() async {
+    final uri = Uri.parse(passwordResetUrl);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open password reset page')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: TextButton(
                       child: const Text("Forgot password"),
                       onPressed: () {
-                        Navigator.pushNamed(
-                            context, passwordRecoveryScreenRoute);
+                        _openPasswordReset();
                       },
                     ),
                   ),
