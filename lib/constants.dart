@@ -15,20 +15,20 @@ const grandisExtendedFont = "Grandis Extended";
 
 // On color 80, 60.... those means opacity
 
-const Color primaryColor = Color(0xFF3D8B87);
+const Color primaryColor = Color(0xFF001489); // FC Home Center Blue
 
 const MaterialColor primaryMaterialColor =
-MaterialColor(0xFF3D8B87, <int, Color>{
-  50: Color(0xFFE8F4F3),
-  100: Color(0xFFC5E4E1),
-  200: Color(0xFF9FD3CE),
-  300: Color(0xFF78C1BB),
-  400: Color(0xFF5BB3AD),
-  500: Color(0xFF3D8B87),
-  600: Color(0xFF378E8A),
-  700: Color(0xFF2F7A77),
-  800: Color(0xFF276964),
-  900: Color(0xFF1A4A47),
+    MaterialColor(0xFF001489, <int, Color>{
+  50: Color(0xFFE6E9F5),
+  100: Color(0xFFB3BEE6),
+  200: Color(0xFF8099D6),
+  300: Color(0xFF4D74C6),
+  400: Color(0xFF2656BA),
+  500: Color(0xFF001489), // Primary FC Blue
+  600: Color(0xFF00127C),
+  700: Color(0xFF000F6B),
+  800: Color(0xFF000C5B),
+  900: Color(0xFF00073D),
 });
 
 const Color blackColor = Color(0xFF16161E);
@@ -57,7 +57,7 @@ const Color darkGreyColor = Color(0xFF1C1C25);
 // const Color greyColor10 = Color(0xFFF8F8F9);
 // const Color greyColor5 = Color(0xFFFBFBFC);
 
-const Color purpleColor = Color(0xFF3D8B87);
+const Color accentBlueColor = Color(0xFF7BA4D9); // FC Home Center Light Blue
 const Color successColor = Color(0xFF2ED573);
 const Color warningColor = Color(0xFFFFBE21);
 const Color errorColor = Color(0xFFEA5B5B);
@@ -80,7 +80,7 @@ final emaildValidator = MultiValidator([
 
 const pasNotMatchErrorText = "passwords do not match";
 
-const String baseUrl = "http://172.16.0.188/api";
-const String storageUrl = "http://172.16.0.188";
-const String passwordResetUrl = "http://172.16.0.188/password/reset";
+const String baseUrl = "https://saktospace.com/api";
+const String storageUrl = "https://saktospace.com";
+const String passwordResetUrl = "https://saktospace.com/password/reset";
 const String GOOGLE_GEMINI_API_KEY = "AIzaSyBlkBaoafLCQeWPk7yU9lVRNLv3XPqn-tM";

@@ -36,7 +36,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final List<Map<String, String>> _paymentMethods = [
     {'value': 'credit_card', 'label': 'Credit Card', 'icon': '💳'},
     {'value': 'debit_card', 'label': 'Debit Card', 'icon': '💳'},
-    {'value': 'paypal', 'label': 'PayPal', 'icon': '📱'},
+    // {'value': 'paypal', 'label': 'PayPal', 'icon': '📱'}, // PayPal temporarily disabled
     {'value': 'gcash', 'label': 'GCash', 'icon': '💰'},
     {'value': 'paymaya', 'label': 'PayMaya', 'icon': '💵'},
     {'value': 'bank_transfer', 'label': 'Bank Transfer', 'icon': '🏦'},
@@ -98,11 +98,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         // Use cart payment API for cart checkout
         List<Map<String, dynamic>>? paymentItems;
         if (widget.isDirectPurchase) {
-          paymentItems = widget.cartItems.map((item) => {
-            'product_id': item['id'],
-            'quantity': item['quantity'],
-            'price': item['price'],
-          }).toList();
+          paymentItems = widget.cartItems
+              .map((item) => {
+                    'product_id': item['id'],
+                    'quantity': item['quantity'],
+                    'price': item['price'],
+                  })
+              .toList();
           print('Payment items from cart: $paymentItems');
         }
 
@@ -178,12 +180,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: isCashOnDelivery ? Colors.orange.shade100 : Colors.green.shade100,
+                  color: isCashOnDelivery
+                      ? Colors.orange.shade100
+                      : Colors.green.shade100,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   isCashOnDelivery ? Icons.pending : Icons.check,
-                  color: isCashOnDelivery ? Colors.orange.shade600 : Colors.green.shade600,
+                  color: isCashOnDelivery
+                      ? Colors.orange.shade600
+                      : Colors.green.shade600,
                   size: 24,
                 ),
               ),
@@ -197,14 +203,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             children: [
               Text('Transaction ID: ${paymentData['transaction_id'] ?? 'N/A'}'),
               const SizedBox(height: 8),
-              Text('Amount: ₱${paymentData['amount'] ?? widget.total.toStringAsFixed(2)}'),
+              Text(
+                  'Amount: ₱${paymentData['amount'] ?? widget.total.toStringAsFixed(2)}'),
               const SizedBox(height: 8),
               Text('Status: ${status.toUpperCase()}'),
               const SizedBox(height: 8),
               Text(
                 isCashOnDelivery
-                  ? 'Your order has been placed successfully! Payment will be collected upon delivery.'
-                  : 'Your order has been processed successfully!',
+                    ? 'Your order has been placed successfully! Payment will be collected upon delivery.'
+                    : 'Your order has been processed successfully!',
               ),
             ],
           ),
@@ -212,7 +219,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Close dialog
-                Navigator.of(context).popUntil((route) => route.isFirst); // Go back to home
+                Navigator.of(context)
+                    .popUntil((route) => route.isFirst); // Go back to home
               },
               child: const Text('Continue Shopping'),
             ),
@@ -229,7 +237,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         border: Border.all(
-          color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade300,
+          color: isSelected
+              ? Theme.of(context).primaryColor
+              : Colors.grey.shade300,
           width: isSelected ? 2 : 1,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -287,23 +297,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                     const SizedBox(height: 16),
                     ...widget.cartItems.map((item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${item['name']} x ${item['quantity']}',
-                              style: const TextStyle(fontSize: 14),
-                            ),
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${item['name']} x ${item['quantity']}',
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
+                              Text(
+                                '₱${item['subtotal']}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500),
+                              ),
+                            ],
                           ),
-                          Text(
-                            '₱${item['subtotal']}',
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
-                    )),
+                        )),
                     const Divider(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -388,7 +399,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 maxLines: 3,
                 validator: (value) {
-                  if (!_sameAsShipping && (value == null || value.trim().isEmpty)) {
+                  if (!_sameAsShipping &&
+                      (value == null || value.trim().isEmpty)) {
                     return 'Please enter billing address';
                   }
                   return null;
@@ -446,7 +458,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           ),
                           SizedBox(width: 12),
@@ -468,4 +481,3 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 }
-
