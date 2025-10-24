@@ -80,7 +80,7 @@ final emaildValidator = MultiValidator([
 
 const pasNotMatchErrorText = "passwords do not match";
 
-const String baseUrl = "https://saktospace.com/api";
-const String storageUrl = "https://saktospace.com";
-const String passwordResetUrl = "https://saktospace.com/password/reset";
+const String baseUrl = "http://172.16.0.188/api";
+const String storageUrl = "http://172.16.0.188";
+const String passwordResetUrl = "http://172.16.0.188/password/reset";
 const String GOOGLE_GEMINI_API_KEY = "AIzaSyBlkBaoafLCQeWPk7yU9lVRNLv3XPqn-tM";
