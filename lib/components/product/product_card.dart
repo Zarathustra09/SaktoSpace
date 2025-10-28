@@ -3,6 +3,37 @@ import 'package:flutter/material.dart';
 import '../../constants.dart';
 import '../network_image_with_loader.dart';
 
+// local helper to render symbol with system font and number with app font
+// (use shared `pesoSymbol` from constants.dart)
+Widget _currencyText(
+  dynamic amount, {
+  TextStyle? style,
+  String? leading,
+}) {
+  double value;
+  if (amount == null) {
+    value = 0.0;
+  } else if (amount is num) {
+    value = amount.toDouble();
+  } else {
+    value = double.tryParse(amount.toString()) ?? 0.0;
+  }
+  final numberText = value.toStringAsFixed(2);
+  final TextStyle baseStyle = style ?? const TextStyle();
+  final TextStyle symbolStyle = baseStyle.copyWith(fontFamily: null);
+  return Text.rich(
+    TextSpan(
+      children: [
+        if (leading != null) TextSpan(text: leading, style: baseStyle),
+        TextSpan(text: '$pesoSymbol ', style: symbolStyle),
+        TextSpan(text: numberText, style: baseStyle),
+      ],
+    ),
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+  );
+}
+
 class ProductCard extends StatelessWidget {
   const ProductCard({
     super.key,
@@ -88,8 +119,9 @@ class ProductCard extends StatelessWidget {
                   priceAfetDiscount != null
                       ? Row(
                           children: [
-                            Text(
-                              "\$$priceAfetDiscount",
+                            // discounted price: show Philippine peso
+                            _currencyText(
+                              priceAfetDiscount,
                               style: const TextStyle(
                                 color: Color(0xFF31B0D8),
                                 fontWeight: FontWeight.w500,
@@ -97,8 +129,9 @@ class ProductCard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: defaultPadding / 4),
-                            Text(
-                              "\$$price",
+                            // original price with line-through
+                            _currencyText(
+                              price,
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .textTheme
@@ -110,14 +143,15 @@ class ProductCard extends StatelessWidget {
                             ),
                           ],
                         )
-                      : Text(
-                          "\$$price",
-                          style: const TextStyle(
-                            color: Color(0xFF31B0D8),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                          ),
+                      : // no discount: show single price
+                      _currencyText(
+                        price,
+                        style: const TextStyle(
+                          color: Color(0xFF31B0D8),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
                         ),
+                      ),
                 ],
               ),
             ),

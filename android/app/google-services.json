@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "153965491515",
+    "project_id": "saktospace",
+    "storage_bucket": "saktospace.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153965491515:android:627d273ed274739164b31e",
+        "android_client_info": {
+          "package_name": "com.saktospace.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCOh0ub3cp62yeJstz-4Z_F0FQEtrUq4I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

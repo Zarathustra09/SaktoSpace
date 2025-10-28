@@ -16,6 +16,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final _signUpFormKey = GlobalKey<SignUpFormState>();
   bool _isLoading = false;
+  bool _agreed = false; // added state for checkbox
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +49,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Row(
                     children: [
                       Checkbox(
-                        onChanged: (value) {},
-                        value: false,
+                        onChanged: (value) {
+                          setState(() {
+                            _agreed = value ?? false;
+                          });
+                        },
+                        value: _agreed,
                       ),
                       Expanded(
                         child: Text.rich(
@@ -81,7 +86,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isLoading
+                      onPressed: (_isLoading || !_agreed)
                           ? null
                           : () async {
                               setState(() {

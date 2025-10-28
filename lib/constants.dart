@@ -15,20 +15,20 @@ const grandisExtendedFont = "Grandis Extended";
 
 // On color 80, 60.... those means opacity
 
-const Color primaryColor = Color(0xFF7B61FF);
+const Color primaryColor = Color(0xFF001489); // FC Home Center Blue
 
 const MaterialColor primaryMaterialColor =
-    MaterialColor(0xFF9581FF, <int, Color>{
-  50: Color(0xFFEFECFF),
-  100: Color(0xFFD7D0FF),
-  200: Color(0xFFBDB0FF),
-  300: Color(0xFFA390FF),
-  400: Color(0xFF8F79FF),
-  500: Color(0xFF7B61FF),
-  600: Color(0xFF7359FF),
-  700: Color(0xFF684FFF),
-  800: Color(0xFF5E45FF),
-  900: Color(0xFF6C56DD),
+    MaterialColor(0xFF001489, <int, Color>{
+  50: Color(0xFFE6E9F5),
+  100: Color(0xFFB3BEE6),
+  200: Color(0xFF8099D6),
+  300: Color(0xFF4D74C6),
+  400: Color(0xFF2656BA),
+  500: Color(0xFF001489), // Primary FC Blue
+  600: Color(0xFF00127C),
+  700: Color(0xFF000F6B),
+  800: Color(0xFF000C5B),
+  900: Color(0xFF00073D),
 });
 
 const Color blackColor = Color(0xFF16161E);
@@ -57,7 +57,7 @@ const Color darkGreyColor = Color(0xFF1C1C25);
 // const Color greyColor10 = Color(0xFFF8F8F9);
 // const Color greyColor5 = Color(0xFFFBFBFC);
 
-const Color purpleColor = Color(0xFF7B61FF);
+const Color accentBlueColor = Color(0xFF7BA4D9); // FC Home Center Light Blue
 const Color successColor = Color(0xFF2ED573);
 const Color warningColor = Color(0xFFFFBE21);
 const Color errorColor = Color(0xFFEA5B5B);
@@ -82,5 +82,24 @@ const pasNotMatchErrorText = "passwords do not match";
 
 const String baseUrl = "https://saktospace.com/api";
 const String storageUrl = "https://saktospace.com";
+const String passwordResetUrl = "https://saktospace.com/password/reset";
 const String GOOGLE_GEMINI_API_KEY = "AIzaSyBlkBaoafLCQeWPk7yU9lVRNLv3XPqn-tM";
 
+// interpunct character U+22C5
+const String kInterPunctChr = '\u22C5';
+
+// Philippine Peso sign U+20B1
+const String pesoSymbol = '\u20B1';
+
+// Helper to format amounts as Philippine Peso (₱123.45)
+String formatPeso(dynamic amount) {
+  double value;
+  if (amount == null) {
+    value = 0.0;
+  } else if (amount is num) {
+    value = amount.toDouble();
+  } else {
+    value = double.tryParse(amount.toString().replaceAll(',', '')) ?? 0.0;
+  }
+  return '$pesoSymbol${value.toStringAsFixed(2)}';
+}
