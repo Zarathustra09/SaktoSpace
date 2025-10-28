@@ -207,7 +207,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                 child: Column(
                                   children: [
                                     Text(
-                                      _orderService.formatCurrency(_orderStats!['total_spent']),
+                                      formatPeso(_orderStats!['total_spent']),
                                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                             fontWeight: FontWeight.bold,
                                             color: successColor,
@@ -315,7 +315,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                             ),
                                             const SizedBox(height: 8),
                                             Text(
-                                              'Total: ${_orderService.formatCurrency(order['total_amount'])}',
+                                              'Total: ${formatPeso(order['total_amount'])}',
                                               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                                     color: primaryColor,
                                                     fontWeight: FontWeight.w600,
@@ -391,7 +391,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   _buildDetailRow('Transaction ID', order['transaction_id'] ?? 'N/A'),
                   _buildDetailRow('Status', order['status'] ?? 'N/A'),
                   _buildDetailRow('Payment Method', order['payment_method'] ?? 'N/A'),
-                  _buildDetailRow('Total Amount', _orderService.formatCurrency(order['total_amount'])),
+                  _buildDetailRow('Total Amount', formatPeso(order['total_amount'])),
                   _buildDetailRow('Order Date', order['order_date']?.toString().split(' ')[0] ?? 'N/A'),
 
                   // Items Section
@@ -523,7 +523,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         ),
                       if (item['price'] != null)
                         Text(
-                          _orderService.formatCurrency(item['price']),
+                          formatPeso(item['price']),
                           style: const TextStyle(
                             color: primaryColor,
                             fontWeight: FontWeight.w600,
@@ -596,7 +596,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
             ],
             if (item['price'] != null) ...[
               Text(
-                'Price: ${_orderService.formatCurrency(item['price'])}',
+                'Price: ${formatPeso(item['price'])}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: primaryColor,
@@ -697,3 +697,4 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 }
+

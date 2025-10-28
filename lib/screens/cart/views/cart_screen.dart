@@ -208,22 +208,34 @@ class _CartScreenState extends State<CartScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              item['name'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 13, // smaller font
-                                fontWeight: FontWeight.w600,
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: item['name'] ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: ' $kInterPunctChr ',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '$pesoSymbol${item['price'].toString()}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '₱${item['price'].toString()}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
-                              ),
                             ),
                           ],
                         ),
@@ -235,7 +247,7 @@ class _CartScreenState extends State<CartScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Subtotal: ₱${item['subtotal']}',
+                        'Subtotal: $pesoSymbol${item['subtotal']}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -339,7 +351,7 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                       ),
                       Text(
-                        '₱${_total.toStringAsFixed(2)}',
+                        '$pesoSymbol${_total.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -379,3 +391,4 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 }
+

@@ -84,3 +84,22 @@ const String baseUrl = "https://saktospace.com/api";
 const String storageUrl = "https://saktospace.com";
 const String passwordResetUrl = "https://saktospace.com/password/reset";
 const String GOOGLE_GEMINI_API_KEY = "AIzaSyBlkBaoafLCQeWPk7yU9lVRNLv3XPqn-tM";
+
+// interpunct character U+22C5
+const String kInterPunctChr = '\u22C5';
+
+// Philippine Peso sign U+20B1
+const String pesoSymbol = '\u20B1';
+
+// Helper to format amounts as Philippine Peso (₱123.45)
+String formatPeso(dynamic amount) {
+  double value;
+  if (amount == null) {
+    value = 0.0;
+  } else if (amount is num) {
+    value = amount.toDouble();
+  } else {
+    value = double.tryParse(amount.toString().replaceAll(',', '')) ?? 0.0;
+  }
+  return '$pesoSymbol${value.toStringAsFixed(2)}';
+}

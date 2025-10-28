@@ -201,6 +201,18 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     rating: product.averageRating ?? 0.0,
                     numOfReviews: product.totalRatings ?? 0,
                   ),
+                  // show formatted Philippine Peso price prominently
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: defaultPadding, vertical: 8),
+                      child: Text(
+                        formatPeso(product.price),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ),
+                  ),
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(defaultPadding),

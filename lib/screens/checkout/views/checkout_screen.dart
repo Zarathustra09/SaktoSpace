@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:shop/services/payment/payment_service.dart';
 import 'package:shop/services/cart/cart_service.dart';
+import 'package:shop/constants.dart'; // added
 
 class CheckoutScreen extends StatefulWidget {
   final double total;
@@ -204,7 +205,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Text('Transaction ID: ${paymentData['transaction_id'] ?? 'N/A'}'),
               const SizedBox(height: 8),
               Text(
-                  'Amount: ₱${paymentData['amount'] ?? widget.total.toStringAsFixed(2)}'),
+                  'Amount $kInterPunctChr $pesoSymbol${paymentData['amount'] ?? widget.total.toStringAsFixed(2)}'),
               const SizedBox(height: 8),
               Text('Status: ${status.toUpperCase()}'),
               const SizedBox(height: 8),
@@ -308,7 +309,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ),
                               ),
                               Text(
-                                '₱${item['subtotal']}',
+                                '$kInterPunctChr $pesoSymbol${item['subtotal']}',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.w500),
                               ),
@@ -327,7 +328,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           ),
                         ),
                         Text(
-                          '₱${widget.total.toStringAsFixed(2)}',
+                          '$pesoSymbol${widget.total.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -467,7 +468,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ],
                       )
                     : Text(
-                        'Pay ₱${widget.total.toStringAsFixed(2)}',
+                        'Pay $pesoSymbol${widget.total.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,

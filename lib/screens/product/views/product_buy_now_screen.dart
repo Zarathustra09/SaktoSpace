@@ -94,7 +94,7 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
     print('Product: ${widget.product?.name}');
     print('Product ID: ${widget.product?.id}');
     print('Quantity: $_quantity');
-    print('Total Price: $_totalPrice');
+    print('Total Price: ${formatPeso(_totalPrice)}');
 
     if (widget.product == null) {
       print('Product is null - aborting');
@@ -204,7 +204,7 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
           CartButton(
             price: _totalPrice,
             title: _isProcessingPayment ? "Processing..." : "Buy Now",
-            subTitle: "Total price",
+            subTitle: formatPeso(_totalPrice),
             press: _isAddingToCart || _isProcessingPayment
                 ? () {} // Empty function when disabled
                 : () async {

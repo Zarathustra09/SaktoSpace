@@ -263,7 +263,7 @@ class AuthService {
         }
 
         // Initialize FCM after successful login
-        await initializeFCM();
+        initializeFCM();
 
         return 'Login successful';
       } else if (response.statusCode == 401) {
