@@ -12,9 +12,11 @@ class ProductService {
     try {
       final headers = await _authService.getHeaders();
       Uri uri;
-      if (categoryId != null) {
+      // Only add category_id parameter if it's not null and not -1 (which represents "All")
+      if (categoryId != null && categoryId != -1) {
         uri = Uri.parse('$baseUrl/products').replace(queryParameters: {'category_id': categoryId.toString()});
       } else {
+        // For "All" category or null categoryId, don't add category_id parameter
         uri = Uri.parse('$baseUrl/products');
       }
       print("Making API request to: $uri");
