@@ -62,6 +62,12 @@ class _CategoriesState extends State<Categories> {
   int? _selectedIndex;
   List<ProdCategoryModel> _categories = [];
 
+  // Create an artificial "All" category
+  ProdCategoryModel get _allCategory => ProdCategoryModel(
+    id: -1, // Use -1 or any negative number to represent "All"
+    name: "All",
+  );
+
   @override
   void initState() {
     super.initState();
@@ -80,7 +86,10 @@ class _CategoriesState extends State<Categories> {
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Center(child: Text('No categories found'));
         }
-        _categories = snapshot.data!;
+
+        // Add "All" category at the beginning
+        _categories = [_allCategory, ...snapshot.data!];
+
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -94,16 +103,22 @@ class _CategoriesState extends State<Categories> {
                   ),
                   child: CategoryBtn(
                     category: _categories[index].name ?? '',
-                    svgSrc: null, // You can map icons if available in your model
+                    svgSrc: index == 0 ? "assets/icons/Category.svg" : null, // Add icon for "All" category
                     isActive: widget.selectedCategoryId == null
                         ? index == 0
-                        : _categories[index].id == widget.selectedCategoryId,
+                        : (index == 0 && widget.selectedCategoryId == -1) || _categories[index].id == widget.selectedCategoryId,
                     press: () {
                       setState(() {
                         _selectedIndex = index;
                       });
                       if (widget.onCategorySelected != null) {
-                        widget.onCategorySelected!(_categories[index]);
+                        // Pass a special category with null-equivalent ID for "All"
+                        if (index == 0) {
+                          // For "All" category, we'll use a special ID that the parent can recognize
+                          widget.onCategorySelected!(ProdCategoryModel(id: -1, name: "All"));
+                        } else {
+                          widget.onCategorySelected!(_categories[index]);
+                        }
                       }
                     },
                   ),
