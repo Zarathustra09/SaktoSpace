@@ -111,14 +111,21 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             print('Product loaded: ${product.name} (ID: ${product.id})');
 
             final bool isProductAvailable = product.stock > 0;
-            final List<String> productImages = [getFullImageUrl(product.image)];
 
-            // If the product has AR model URL, add it to the images list
-            if (product.arModelUrl != null && product.arModelUrl!.isNotEmpty) {
-              productImages.add(getFullImageUrl(product.arModelUrl!));
+            // Build images list: main image first, then additional images, then AR model
+            final List<String> productImages = [];
+
+            // 1. Add main product image first
+            productImages.add(getFullImageUrl(product.image));
+
+            // 2. Add additional images from the images relationship
+            if (product.images != null && product.images!.isNotEmpty) {
+              for (final additionalImage in product.images!) {
+                productImages.add(getFullImageUrl(additionalImage.url));
+              }
             }
 
-            // Get the full AR model URL for the AR viewer
+            // Get the full AR model URL for the AR viewer (don't add to images list)
             final String? fullArModelUrl =
                 product.arModelUrl != null && product.arModelUrl!.isNotEmpty
                     ? getFullImageUrl(product.arModelUrl!)
