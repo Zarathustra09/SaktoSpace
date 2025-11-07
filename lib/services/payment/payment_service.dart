@@ -25,10 +25,10 @@ class PaymentService {
     final headers = await _authService.getHeaders();
     print('Request Headers: $headers');
 
-    // Automatically set status based on payment method
-    String paymentStatus = status ?? (paymentMethod == 'cash_on_delivery' ? 'pending' : 'completed');
+    // Set payment status based on payment method using new constants
+    String paymentStatus = status ?? _getPaymentStatusFromMethod(paymentMethod);
     print('Payment Method: $paymentMethod');
-    print('Auto-determined Status: $paymentStatus');
+    print('Auto-determined Payment Status: $paymentStatus');
 
     final requestBody = {
       'product_id': productId,
@@ -68,7 +68,10 @@ class PaymentService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (responseData['success'] == true) {
           print('Payment successful!');
-          return responseData;
+
+          // Process the response to handle new Order model structure
+          final processedResponse = _processPaymentResponse(responseData);
+          return processedResponse;
         } else {
           print('Payment failed - success flag is false');
           String errorMessage = responseData['message'] ?? 'Payment processing failed';
@@ -117,10 +120,10 @@ class PaymentService {
     final url = Uri.parse('$baseUrl/payment/process');
     final headers = await _authService.getHeaders();
 
-    // Automatically set status based on payment method
-    String paymentStatus = status ?? (paymentMethod == 'cash_on_delivery' ? 'pending' : 'completed');
+    // Set payment status based on payment method using new constants
+    String paymentStatus = status ?? _getPaymentStatusFromMethod(paymentMethod);
     print('Payment Method: $paymentMethod');
-    print('Auto-determined Status: $paymentStatus');
+    print('Auto-determined Payment Status: $paymentStatus');
 
     final requestBody = {
       'payment_method': paymentMethod,
@@ -144,7 +147,9 @@ class PaymentService {
     final responseData = jsonDecode(response.body);
 
     if (response.statusCode == 200 && responseData['success'] == true) {
-      return responseData;
+      // Process the response to handle new Order model structure
+      final processedResponse = _processPaymentResponse(responseData);
+      return processedResponse;
     } else {
       String errorMessage = 'Payment processing failed';
 
@@ -160,9 +165,9 @@ class PaymentService {
     }
   }
 
-  /// Get payment details by ID
+  /// Get payment details by ID - now uses payments/{id}/orders endpoint
   Future<Map<String, dynamic>> getPayment(int paymentId) async {
-    final url = Uri.parse('$baseUrl/payment/$paymentId');
+    final url = Uri.parse('$baseUrl/payments/$paymentId/orders');
     final headers = await _authService.getHeaders();
 
     print('GET $url');
@@ -175,7 +180,9 @@ class PaymentService {
     final responseData = jsonDecode(response.body);
 
     if (response.statusCode == 200 && responseData['success'] == true) {
-      return responseData;
+      // Process the response to handle new Order model structure
+      final processedResponse = _processPaymentResponse(responseData);
+      return processedResponse;
     } else {
       String errorMessage = 'Failed to fetch payment details';
 
@@ -187,9 +194,9 @@ class PaymentService {
     }
   }
 
-  /// Get payment history for authenticated user
+  /// Get payment history for authenticated user - now uses orders service
   Future<Map<String, dynamic>> getPaymentHistory() async {
-    final url = Uri.parse('$baseUrl/payments/history');
+    final url = Uri.parse('$baseUrl/orders/by-payment');
     final headers = await _authService.getHeaders();
 
     print('GET $url');
@@ -202,7 +209,9 @@ class PaymentService {
     final responseData = jsonDecode(response.body);
 
     if (response.statusCode == 200 && responseData['success'] == true) {
-      return responseData;
+      // Process the response to handle new Order model structure for payment history
+      final processedResponse = _processPaymentHistoryResponse(responseData);
+      return processedResponse;
     } else {
       String errorMessage = 'Failed to fetch payment history';
 
@@ -212,5 +221,249 @@ class PaymentService {
 
       throw Exception(errorMessage);
     }
+  }
+
+  /// Get orders by product for a specific product
+  Future<List<Map<String, dynamic>>> getOrdersByProduct(int productId) async {
+    final url = Uri.parse('$baseUrl/products/$productId/orders');
+    final headers = await _authService.getHeaders();
+
+    print('GET $url');
+    print('Headers: $headers');
+
+    final response = await http.get(url, headers: headers);
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    final responseData = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && responseData['success'] == true) {
+      return List<Map<String, dynamic>>.from(responseData['data']);
+    } else {
+      String errorMessage = 'Failed to fetch orders for product';
+
+      if (responseData.containsKey('message')) {
+        errorMessage = responseData['message'];
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Get available order statuses
+  Future<List<String>> getOrderStatuses() async {
+    final url = Uri.parse('$baseUrl/orders/statuses');
+    final headers = await _authService.getHeaders();
+
+    print('GET $url');
+    print('Headers: $headers');
+
+    final response = await http.get(url, headers: headers);
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    final responseData = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && responseData['success'] == true) {
+      return List<String>.from(responseData['data']);
+    } else {
+      // Return default statuses if API call fails
+      return [
+        'Preparing',
+        'To Ship',
+        'In Transit',
+        'Out for Delivery',
+        'Delivered',
+        'Cancelled',
+      ];
+    }
+  }
+
+  /// Get orders by status
+  Future<List<Map<String, dynamic>>> getOrdersByStatus(String status) async {
+    final url = Uri.parse('$baseUrl/orders/status/$status');
+    final headers = await _authService.getHeaders();
+
+    print('GET $url');
+    print('Headers: $headers');
+
+    final response = await http.get(url, headers: headers);
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    final responseData = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && responseData['success'] == true) {
+      return List<Map<String, dynamic>>.from(responseData['data']);
+    } else {
+      String errorMessage = 'Failed to fetch orders by status';
+
+      if (responseData.containsKey('message')) {
+        errorMessage = responseData['message'];
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Get payment status based on payment method using new Payment model constants
+  String _getPaymentStatusFromMethod(String paymentMethod) {
+    switch (paymentMethod.toLowerCase()) {
+      case 'cash_on_delivery':
+      case 'cod':
+        return 'Pending'; // COD payments are pending until delivery
+      case 'credit_card':
+      case 'debit_card':
+      case 'gcash':
+      case 'paymaya':
+      case 'bank_transfer':
+      case 'paypal':
+        return 'Completed'; // Non-COD payments are completed immediately
+      default:
+        return 'Pending';
+    }
+  }
+
+  /// Get payment status color for UI using new constants
+  String getPaymentStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'cancelled':
+        return 'error';
+      case 'refunded':
+        return 'info';
+      default:
+        return 'primary';
+    }
+  }
+
+  /// Get available payment statuses using new constants
+  List<String> getAvailablePaymentStatuses() {
+    return [
+      'Pending',    // For COD
+      'Completed',  // For other payment methods
+      'Cancelled',  // For cancelled orders
+      'Refunded',   // For refunded orders
+    ];
+  }
+
+  /// Get payment status description using new constants
+  String getPaymentStatusDescription(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'Payment received successfully';
+      case 'pending':
+        return 'Payment pending (Cash on Delivery)';
+      case 'cancelled':
+        return 'Payment cancelled';
+      case 'refunded':
+        return 'Payment refunded';
+      default:
+        return 'Payment status unknown';
+    }
+  }
+
+  /// Process payment response to handle new Order model structure
+  /// Maintains backward compatibility by creating purchased_items from orders
+  Map<String, dynamic> _processPaymentResponse(Map<String, dynamic> response) {
+    try {
+      if (response['data'] != null && response['data'] is Map<String, dynamic>) {
+        final paymentData = response['data'] as Map<String, dynamic>;
+
+        // Check if orders exist and convert to purchased_items for backward compatibility
+        if (paymentData['orders'] != null && paymentData['orders'] is List) {
+          final orders = paymentData['orders'] as List;
+
+          // Create purchased_items from orders for backward compatibility
+          final purchasedItems = orders.map((order) {
+            return {
+              'product_id': order['product_id'],
+              'name': order['product_name'] ?? order['product']?['name'] ?? 'Unknown Product',
+              'price': _parseDouble(order['price']),
+              'quantity': order['quantity'] ?? 1,
+              'subtotal': _parseDouble(order['subtotal']),
+              'category_id': order['category_id'],
+              'purchased_at': order['purchased_at'],
+              'product': order['product'],
+              // Order status (separate from payment status)
+              'order_status': order['status'] ?? 'Preparing',
+              'status_updated_at': order['status_updated_at'],
+              // Include payment status for context
+              'payment_status': paymentData['status'] ?? 'Pending',
+            };
+          }).toList();
+
+          // Add purchased_items for backward compatibility
+          paymentData['purchased_items'] = purchasedItems;
+
+          print('Converted ${orders.length} orders to purchased_items with separate status tracking');
+        }
+      }
+
+      return response;
+    } catch (e) {
+      print('Error processing payment response: $e');
+      // Return original response if processing fails
+      return response;
+    }
+  }
+
+  /// Process payment history response to handle multiple payments with orders
+  Map<String, dynamic> _processPaymentHistoryResponse(Map<String, dynamic> response) {
+    try {
+      if (response['data'] != null && response['data'] is List) {
+        final payments = response['data'] as List;
+
+        for (var payment in payments) {
+          if (payment is Map<String, dynamic>) {
+            // Process each payment's orders
+            if (payment['orders'] != null && payment['orders'] is List) {
+              final orders = payment['orders'] as List;
+
+              // Create purchased_items from orders for backward compatibility
+              final purchasedItems = orders.map((order) {
+                return {
+                  'product_id': order['product_id'],
+                  'name': order['product_name'] ?? order['product']?['name'] ?? 'Unknown Product',
+                  'price': _parseDouble(order['price']),
+                  'quantity': order['quantity'] ?? 1,
+                  'subtotal': _parseDouble(order['subtotal']),
+                  'category_id': order['category_id'],
+                  'purchased_at': order['purchased_at'],
+                  'product': order['product'], // Include full product details if available
+                  'status': order['status'] ?? 'Preparing', // Add order status
+                  'status_updated_at': order['status_updated_at'], // Add status update timestamp
+                };
+              }).toList();
+
+              // Add purchased_items for backward compatibility
+              payment['purchased_items'] = purchasedItems;
+            }
+          }
+        }
+
+        print('Processed ${payments.length} payments in history with status tracking');
+      }
+
+      return response;
+    } catch (e) {
+      print('Error processing payment history response: $e');
+      // Return original response if processing fails
+      return response;
+    }
+  }
+
+  /// Helper method to safely parse double values
+  double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    }
+    return 0.0;
   }
 }
