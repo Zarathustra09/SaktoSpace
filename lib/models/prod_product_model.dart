@@ -1,6 +1,29 @@
 // lib/models/prod_product_model.dart
 import 'package:shop/models/prod_category_model.dart';
 
+class ProdProductImage {
+  final int id;
+  final int productId;
+  final String url;
+  final String? altText;
+
+  ProdProductImage({
+    required this.id,
+    required this.productId,
+    required this.url,
+    this.altText,
+  });
+
+  factory ProdProductImage.fromJson(Map<String, dynamic> json) {
+    return ProdProductImage(
+      id: json['id'],
+      productId: json['product_id'],
+      url: json['url'],
+      altText: json['alt_text'],
+    );
+  }
+}
+
 class ProdProductModel {
   final int id;
   final String name;
@@ -17,6 +40,7 @@ class ProdProductModel {
   final int? totalRatings;
   final List<dynamic>? ratings; // Changed to dynamic to avoid circular import
   final Map<String, int>? ratingBreakdown; // Add this property
+  final List<ProdProductImage>? images; // Add additional images
 
   ProdProductModel({
     required this.id,
@@ -34,6 +58,7 @@ class ProdProductModel {
     this.totalRatings,
     this.ratings,
     this.ratingBreakdown, // Add this parameter
+    this.images, // Add additional images parameter
   });
 
   factory ProdProductModel.fromJson(Map<String, dynamic> json) {
@@ -91,6 +116,15 @@ class ProdProductModel {
       return null;
     }
 
+    // Parse additional images
+    List<ProdProductImage>? _parseImages(dynamic images) {
+      if (images == null) return null;
+      if (images is List) {
+        return images.map((item) => ProdProductImage.fromJson(item)).toList();
+      }
+      return null;
+    }
+
     return ProdProductModel(
       id: json['id'],
       name: json['name'],
@@ -109,6 +143,7 @@ class ProdProductModel {
       totalRatings: _parseInt(json['total_ratings']),
       ratings: json['ratings'],
       ratingBreakdown: _parseRatingBreakdown(json['rating_breakdown']),
+      images: _parseImages(json['images']),
     );
   }
 }

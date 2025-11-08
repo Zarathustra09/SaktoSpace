@@ -20,7 +20,8 @@ class _OffersCarouselAndCategoriesState extends State<OffersCarouselAndCategorie
 
   void _onCategorySelected(ProdCategoryModel category) {
     setState(() {
-      _selectedCategoryId = category.id;
+      // If "All" category is selected (ID -1), set categoryId to null
+      _selectedCategoryId = category.id == -1 ? null : category.id;
     });
   }
 
@@ -43,7 +44,7 @@ class _OffersCarouselAndCategoriesState extends State<OffersCarouselAndCategorie
         // While loading use 👇
         // const CategoriesSkelton(),
         Categories(
-          selectedCategoryId: _selectedCategoryId,
+          selectedCategoryId: _selectedCategoryId == null ? -1 : _selectedCategoryId,
           onCategorySelected: _onCategorySelected,
         ),
         PopularProducts(categoryId: _selectedCategoryId),
