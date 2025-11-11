@@ -83,7 +83,7 @@ const pasNotMatchErrorText = "passwords do not match";
 const String baseUrl = "https://saktospace.com/api";
 const String storageUrl = "https://saktospace.com";
 const String passwordResetUrl = "https://saktospace.com/password/reset";
-const String GOOGLE_GEMINI_API_KEY = "AIzaSyBlkBaoafLCQeWPk7yU9lVRNLv3XPqn-tM";
+const String GOOGLE_GEMINI_API_KEY = "AIzaSyAQh0IjFuZ6QzTtIeENlptF3TO4epb1H-w";
 
 // interpunct character U+22C5
 const String kInterPunctChr = '\u22C5';
