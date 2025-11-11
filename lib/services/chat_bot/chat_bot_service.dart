@@ -7,37 +7,35 @@ class ChatBotService {
   static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
   static Future<String> generateResponse(String userMessage) async {
-    log('ChatBotService: Starting generateResponse for message: "${userMessage.substring(0, userMessage.length > 50 ? 50 : userMessage.length)}..."');
+    print('ChatBotService: Starting generateResponse for message: "${userMessage.length > 50 ? userMessage.substring(0, 50) : userMessage}..."');
+    log('ChatBotService: Starting generateResponse for message: "${userMessage.length > 50 ? userMessage.substring(0, 50) : userMessage}..."');
 
     try {
       // Check if API key is available
       if (GOOGLE_GEMINI_API_KEY.isEmpty) {
+        print('ChatBotService: ERROR - API key is empty');
         log('ChatBotService: ERROR - API key is empty');
         return 'Sorry, API key not configured.';
       }
 
-      log('ChatBotService: API key length: ${GOOGLE_GEMINI_API_KEY.length}');
+      print('ChatBotService: API key configured (length: ${GOOGLE_GEMINI_API_KEY.length})');
+      log('ChatBotService: API key configured (length: ${GOOGLE_GEMINI_API_KEY.length})');
 
+      // Use exact format from curl example
       final requestBody = {
-        "system_instruction": {
-          "parts": [
-            {
-              "text": "You are a chatbot named SaktoBot. You are to help answer basic questions about our app name Sakto Space. A ecommerce furniture AR enabled app."
-            }
-          ]
-        },
         "contents": [
           {
             "parts": [
               {
-                "text": userMessage
+                "text": "You are SaktoBot, a helpful assistant for Sakto Space - an ecommerce furniture app with AR capabilities. User question: $userMessage"
               }
             ]
           }
         ]
       };
 
-      log('ChatBotService: Sending request to Gemini API');
+      print('ChatBotService: Request URL: $_baseUrl');
+      print('ChatBotService: Request body: ${jsonEncode(requestBody)}');
       log('ChatBotService: Request URL: $_baseUrl');
       log('ChatBotService: Request body: ${jsonEncode(requestBody)}');
 
@@ -50,72 +48,74 @@ class ChatBotService {
         body: jsonEncode(requestBody),
       );
 
-      log('ChatBotService: Received response with status code: ${response.statusCode}');
-      log('ChatBotService: Response headers: ${response.headers}');
-      log('ChatBotService: Full response body: ${response.body}');
+      print('ChatBotService: Response status: ${response.statusCode}');
+      print('ChatBotService: Response body: ${response.body}');
+      log('ChatBotService: Response status: ${response.statusCode}');
+      log('ChatBotService: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        log('ChatBotService: Successfully received response from API');
-        final data = jsonDecode(response.body);
-        log('ChatBotService: Parsed response data: ${jsonEncode(data)}');
-
-        // More defensive parsing
         try {
-          final candidates = data['candidates'];
-          if (candidates == null || candidates.isEmpty) {
-            log('ChatBotService: No candidates in response');
-            return 'Sorry, no response generated.';
-          }
+          final data = jsonDecode(response.body);
 
-          final content = candidates[0]['content'];
-          if (content == null) {
-            log('ChatBotService: No content in first candidate');
-            return 'Sorry, no content in response.';
-          }
+          if (data['candidates'] != null &&
+              data['candidates'].isNotEmpty &&
+              data['candidates'][0]['content'] != null &&
+              data['candidates'][0]['content']['parts'] != null &&
+              data['candidates'][0]['content']['parts'].isNotEmpty &&
+              data['candidates'][0]['content']['parts'][0]['text'] != null) {
 
-          final parts = content['parts'];
-          if (parts == null || parts.isEmpty) {
-            log('ChatBotService: No parts in content');
-            return 'Sorry, no parts in response.';
+            final text = data['candidates'][0]['content']['parts'][0]['text'];
+            print('ChatBotService: Success - Response received');
+            log('ChatBotService: Success - Response received');
+            return text;
+          } else {
+            print('ChatBotService: Invalid response structure: ${jsonEncode(data)}');
+            log('ChatBotService: Invalid response structure: ${jsonEncode(data)}');
+            return 'Sorry, received invalid response format.';
           }
-
-          final text = parts[0]['text'];
-          if (text == null) {
-            log('ChatBotService: No text in first part');
-            return 'Sorry, no text in response.';
-          }
-
-          log('ChatBotService: Extracted text response: "${text.substring(0, text.length > 100 ? 100 : text.length)}..."');
-          return text;
         } catch (parseError) {
-          log('ChatBotService: Error parsing response: $parseError');
+          print('ChatBotService: JSON parse error: $parseError');
+          log('ChatBotService: JSON parse error: $parseError');
           return 'Sorry, error parsing response.';
         }
-      } else if (response.statusCode == 400) {
-        log('ChatBotService: Bad request (400) - Check request format');
-        return 'Sorry, invalid request format.';
-      } else if (response.statusCode == 401) {
-        log('ChatBotService: Unauthorized (401) - Check API key');
-        return 'Sorry, API authentication failed.';
-      } else if (response.statusCode == 403) {
-        log('ChatBotService: Forbidden (403) - Check API permissions');
-        return 'Sorry, API access forbidden.';
-      } else if (response.statusCode == 429) {
-        log('ChatBotService: Rate limit exceeded (429)');
-        return 'Sorry, too many requests. Please try again later.';
       } else {
-        log('ChatBotService: API request failed with status ${response.statusCode}');
-        log('ChatBotService: Error response body: ${response.body}');
-        return 'Sorry, there was an error connecting to SaktoBot. Status: ${response.statusCode}';
+        print('ChatBotService: HTTP Error ${response.statusCode}: ${response.body}');
+        log('ChatBotService: HTTP Error ${response.statusCode}: ${response.body}');
+
+        // Try to parse error details
+        try {
+          final errorData = jsonDecode(response.body);
+          print('ChatBotService: Error details: ${jsonEncode(errorData)}');
+          log('ChatBotService: Error details: ${jsonEncode(errorData)}');
+        } catch (e) {
+          print('ChatBotService: Could not parse error response');
+          log('ChatBotService: Could not parse error response');
+        }
+
+        switch (response.statusCode) {
+          case 400:
+            return 'Sorry, invalid request. Please try again.';
+          case 401:
+            return 'Sorry, API authentication failed.';
+          case 403:
+            return 'Sorry, API access forbidden.';
+          case 429:
+            return 'Sorry, too many requests. Please try again later.';
+          default:
+            return 'Sorry, service unavailable. Status: ${response.statusCode}';
+        }
       }
     } catch (e, stackTrace) {
-      log('ChatBotService: Exception occurred: $e', error: e, stackTrace: stackTrace);
+      print('ChatBotService: Exception: $e');
+      print('ChatBotService: StackTrace: $stackTrace');
+      log('ChatBotService: Exception: $e', error: e, stackTrace: stackTrace);
+
       if (e.toString().contains('SocketException')) {
         return 'Sorry, no internet connection.';
       } else if (e.toString().contains('TimeoutException')) {
         return 'Sorry, request timed out.';
       } else {
-        return 'Sorry, something went wrong: ${e.toString()}';
+        return 'Sorry, unexpected error: ${e.toString()}';
       }
     }
   }

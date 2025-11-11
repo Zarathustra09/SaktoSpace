@@ -53,13 +53,17 @@ class _HomeBotPageState extends State<HomeBotPage> {
   }
 
   void _handleSend(ChatMessage msg) async {
+    print('HomeBotPage: User sent message: ${msg.text}');
+
     setState(() {
       _messages.insert(0, msg);
       _typingUsers.add(_bot);
     });
 
     try {
+      print('HomeBotPage: Calling ChatBotService.generateResponse');
       final response = await ChatBotService.generateResponse(msg.text);
+      print('HomeBotPage: Received response: $response');
 
       setState(() {
         _typingUsers.remove(_bot);
@@ -73,12 +77,13 @@ class _HomeBotPageState extends State<HomeBotPage> {
         );
       });
     } catch (e) {
+      print('HomeBotPage: Error occurred: $e');
       setState(() {
         _typingUsers.remove(_bot);
         _messages.insert(
           0,
           ChatMessage(
-            text: "Sorry, I'm having trouble responding right now. Please try again later.",
+            text: "Sorry, I'm having trouble responding right now. Please try again later. Error: ${e.toString()}",
             user: _bot,
             createdAt: DateTime.now(),
           ),
