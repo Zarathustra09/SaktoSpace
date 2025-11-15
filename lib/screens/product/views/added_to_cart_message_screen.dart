@@ -40,11 +40,11 @@ class AddedToCartMessageScreen extends StatelessWidget {
                 },
                 child: const Text("Continue shopping"),
               ),
-              const SizedBox(height: defaultPadding),
-              ElevatedButton(
-                onPressed: () {},
-                child: const Text("Checkout"),
-              ),
+              // const SizedBox(height: defaultPadding),
+              // ElevatedButton(
+              //   onPressed: () {},
+              //   child: const Text("Checkout"),
+              // ),
               const Spacer(),
             ],
           ),

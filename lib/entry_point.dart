@@ -4,7 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shop/constants.dart';
 import 'package:shop/route/screen_export.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:shop/screens/notification/view/notificatios_screen.dart' show NotificationsScreen, NotificationService;
+import 'package:shop/screens/notification/view/notificatios_screen.dart'
+    show NotificationsScreen, NotificationService;
 import 'package:shop/screens/discover/views/discover_screen.dart';
 
 class EntryPoint extends StatefulWidget {
@@ -15,18 +16,11 @@ class EntryPoint extends StatefulWidget {
 }
 
 class _EntryPointState extends State<EntryPoint> {
-  final List _pages = const [
-    HomeScreen(),
-    DiscoverScreen(),
-
-    // EmptyCartScreen(), // if Cart is empty
-    CartScreen(),
-
-    HomeBotPage(),
-
-    ProfileScreen(),
-  ];
+  // Instead of keeping a const pages list, we build it inside `build` so we can
+  // pass dynamic callbacks (e.g. a back-to-home action for the chat page).
   int _currentIndex = 0;
+  // Keep track of the tab that was active prior to selecting the Chat tab.
+  int _previousIndex = 0;
 
   // Unread notifications badge
   final NotificationService _notificationService = NotificationService();
@@ -103,7 +97,8 @@ class _EntryPointState extends State<EntryPoint> {
                 onPressed: () async {
                   await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                    MaterialPageRoute(
+                        builder: (_) => const NotificationsScreen()),
                   );
                   // Refresh badge after viewing notifications
                   _loadUnread();
@@ -121,15 +116,20 @@ class _EntryPointState extends State<EntryPoint> {
                   right: 6,
                   top: 6,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4, vertical: 1.5),
                     decoration: BoxDecoration(
                       color: errorColor,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    constraints:
+                        const BoxConstraints(minWidth: 16, minHeight: 16),
                     child: Text(
                       _unreadCount > 99 ? '99+' : '$_unreadCount',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -139,16 +139,49 @@ class _EntryPointState extends State<EntryPoint> {
         ],
       ),
       // body: _pages[_currentIndex],
-      body: PageTransitionSwitcher(
-        duration: defaultDuration,
-        transitionBuilder: (child, animation, secondAnimation) {
-          return FadeThroughTransition(
-            animation: animation,
-            secondaryAnimation: secondAnimation,
-            child: child,
-          );
+      body: WillPopScope(
+        onWillPop: () async {
+          // When at the chat tab, pressing system back should return to the
+          // previously-selected tab. Otherwise keep the existing behavior
+          // (if at home -> pop/close, otherwise go to home).
+          if (_currentIndex == 0) return true;
+          if (_currentIndex == 3) {
+            setState(() => _currentIndex = _previousIndex);
+            return false;
+          }
+          // Not on home and not on chat -> go to home
+          setState(() => _currentIndex = 0);
+          return false;
         },
-        child: _pages[_currentIndex],
+        child: PageTransitionSwitcher(
+          duration: defaultDuration,
+          transitionBuilder: (child, animation, secondAnimation) {
+            return FadeThroughTransition(
+              animation: animation,
+              secondaryAnimation: secondAnimation,
+              child: child,
+            );
+          },
+          child: () {
+            // Build pages here so we can pass a callback to the Chat page that
+            // returns to the home tab when the AppBar back button is pressed.
+            final pages = [
+              const HomeScreen(),
+              const DiscoverScreen(),
+              const CartScreen(),
+              HomeBotPage(
+                onBack: () {
+                  setState(() {
+                    _currentIndex = _previousIndex;
+                  });
+                },
+              ),
+              const ProfileScreen(),
+            ];
+
+            return pages[_currentIndex];
+          }(),
+        ),
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.only(top: defaultPadding / 2),
@@ -159,6 +192,12 @@ class _EntryPointState extends State<EntryPoint> {
           currentIndex: _currentIndex,
           onTap: (index) {
             if (index != _currentIndex) {
+              // When navigating to chat, record the previous index so we can
+              // return to it when the user leaves chat.
+              if (index == 3) {
+                _previousIndex = _currentIndex;
+              }
+
               setState(() {
                 _currentIndex = index;
               });

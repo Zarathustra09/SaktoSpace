@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:shop/constants.dart';
 
 class ChatBotService {
-  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+  static const String _baseUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
   static Future<String> generateResponse(String userMessage) async {
     try {
@@ -17,16 +18,15 @@ class ChatBotService {
           "system_instruction": {
             "parts": [
               {
-                "text": "You are a chatbot named SaktoBot. You are to help answer basic questions about our app name Sakto Space. A ecommerce furniture AR enabled app."
+                "text":
+                    "You are a chatbot named SaktoBot. You are to help answer basic questions about our app name Sakto Space. A ecommerce furniture AR enabled app."
               }
             ]
           },
           "contents": [
             {
               "parts": [
-                {
-                  "text": userMessage
-                }
+                {"text": userMessage}
               ]
             }
           ]

@@ -29,6 +29,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
   final _billingAddressController = TextEditingController();
   final _shippingAddressController = TextEditingController();
+  final _shippingNameController = TextEditingController();
+  final _shippingContactController = TextEditingController();
 
   String _selectedPaymentMethod = 'credit_card';
   bool _sameAsShipping = true;
@@ -39,7 +41,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     {'value': 'debit_card', 'label': 'Debit Card', 'icon': '💳'},
     // {'value': 'paypal', 'label': 'PayPal', 'icon': '📱'}, // PayPal temporarily disabled
     {'value': 'gcash', 'label': 'GCash', 'icon': '💰'},
-    {'value': 'paymaya', 'label': 'PayMaya', 'icon': '💵'},
+    // {'value': 'paymaya', 'label': 'PayMaya', 'icon': '💵'},
     {'value': 'bank_transfer', 'label': 'Bank Transfer', 'icon': '🏦'},
     {'value': 'cash_on_delivery', 'label': 'Cash on Delivery', 'icon': '📦'},
   ];
@@ -48,6 +50,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void dispose() {
     _billingAddressController.dispose();
     _shippingAddressController.dispose();
+    _shippingNameController.dispose();
+    _shippingContactController.dispose();
     super.dispose();
   }
 
@@ -92,6 +96,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           paymentMethod: _selectedPaymentMethod,
           billingAddress: billingAddress,
           shippingAddress: _shippingAddressController.text,
+          recipientName: _shippingNameController.text,
+          recipientContact: _shippingContactController.text,
         );
         print('Direct payment result: $result');
       } else {
@@ -104,7 +110,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     'product_id': item['id'] ?? item['product_id'],
                     'quantity': item['quantity'] ?? 1,
                     'price': item['price'],
-                    'name': item['name'], // Include product name for better tracking
+                    'name': item[
+                        'name'], // Include product name for better tracking
                   })
               .toList();
           print('Payment items from cart: $paymentItems');
@@ -114,6 +121,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           paymentMethod: _selectedPaymentMethod,
           billingAddress: billingAddress,
           shippingAddress: _shippingAddressController.text,
+          recipientName: _shippingNameController.text,
+          recipientContact: _shippingContactController.text,
           cartItems: paymentItems,
         );
         print('Cart payment result: $result');
@@ -130,7 +139,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         throw Exception('Invalid payment response: missing payment data');
       }
 
-      print('Payment processed successfully with orders: ${paymentData['orders']?.length ?? 0}');
+      print(
+          'Payment processed successfully with orders: ${paymentData['orders']?.length ?? 0}');
 
       // Only clear cart if this is NOT a direct purchase (i.e., it's from cart)
       if (!widget.isDirectPurchase) {
@@ -208,14 +218,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
 
     // Return the clean error message or a generic one
-    return cleanError.isNotEmpty ? cleanError : 'Payment failed. Please try again.';
+    return cleanError.isNotEmpty
+        ? cleanError
+        : 'Payment failed. Please try again.';
   }
 
   void _showSuccessDialog(Map<String, dynamic> paymentData) {
     final bool isCashOnDelivery = _selectedPaymentMethod == 'cash_on_delivery';
 
     // Payment status using new constants (separate from order status)
-    final String paymentStatus = paymentData['status'] ?? (isCashOnDelivery ? 'Pending' : 'Completed');
+    final String paymentStatus =
+        paymentData['status'] ?? (isCashOnDelivery ? 'Pending' : 'Completed');
 
     // Order status (separate from payment status) - defaults to 'Preparing'
     final orderStatus = paymentData['orders']?.isNotEmpty == true
@@ -224,8 +237,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     // Handle orders count for display
     final ordersCount = paymentData['orders']?.length ??
-                      paymentData['purchased_items']?.length ??
-                      widget.cartItems.length;
+        paymentData['purchased_items']?.length ??
+        widget.cartItems.length;
 
     showDialog(
       context: context,
@@ -269,7 +282,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
-              Text('Items: $ordersCount ${ordersCount == 1 ? 'item' : 'items'}'),
+              Text(
+                  'Items: $ordersCount ${ordersCount == 1 ? 'item' : 'items'}'),
               const SizedBox(height: 12),
 
               // Payment Status Section
@@ -278,7 +292,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 decoration: BoxDecoration(
                   color: _getPaymentStatusColor(paymentStatus).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _getPaymentStatusColor(paymentStatus).withOpacity(0.3)),
+                  border: Border.all(
+                      color: _getPaymentStatusColor(paymentStatus)
+                          .withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
@@ -303,7 +319,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           Text(
                             _getPaymentStatusDescription(paymentStatus),
                             style: TextStyle(
-                              color: _getPaymentStatusColor(paymentStatus).withOpacity(0.8),
+                              color: _getPaymentStatusColor(paymentStatus)
+                                  .withOpacity(0.8),
                               fontSize: 10,
                             ),
                           ),
@@ -321,7 +338,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 decoration: BoxDecoration(
                   color: _getOrderStatusColor(orderStatus).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _getOrderStatusColor(orderStatus).withOpacity(0.3)),
+                  border: Border.all(
+                      color:
+                          _getOrderStatusColor(orderStatus).withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
@@ -346,7 +365,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           Text(
                             _getOrderStatusDescription(orderStatus),
                             style: TextStyle(
-                              color: _getOrderStatusColor(orderStatus).withOpacity(0.8),
+                              color: _getOrderStatusColor(orderStatus)
+                                  .withOpacity(0.8),
                               fontSize: 10,
                             ),
                           ),
@@ -637,6 +657,44 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
+            ),
+            const SizedBox(height: 12),
+            // Recipient name
+            TextFormField(
+              controller: _shippingNameController,
+              decoration: const InputDecoration(
+                labelText: 'Recipient Name',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter recipient name';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            // Recipient contact number
+            TextFormField(
+              controller: _shippingContactController,
+              decoration: const InputDecoration(
+                labelText: 'Contact Number',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter contact number';
+                }
+                // basic phone validation: only digits and optional leading +
+                final cleaned = value.replaceAll(RegExp(r'[^\d+]'), '');
+                if (!RegExp(r'^\+?\d{7,15}\$').hasMatch(cleaned)) {
+                  return 'Enter a valid contact number';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 12),
             TextFormField(

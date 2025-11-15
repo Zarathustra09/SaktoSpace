@@ -3,6 +3,7 @@ import 'package:shop/constants.dart';
 import 'package:shop/route/route_constants.dart';
 import 'package:shop/services/auth/login_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'components/login_form.dart';
 
@@ -38,9 +39,25 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Image.asset(
-              "assets/images/login_dark.png",
-              fit: BoxFit.cover,
+            // Show the app logo here with padding so it doesn't touch the
+            // sides on narrow screens.
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: defaultPadding,
+                vertical: 36.0,
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/logo/Shoplon.svg',
+                  // Use a width that respects the horizontal padding so the
+                  // logo doesn't touch the edges, and approximate the
+                  // original image height by using a fraction of screen
+                  // width. Tweak the multiplier to match precisely.
+                  width: size.width - (defaultPadding * 2),
+                  height: (size.width - (defaultPadding * 2)) * 0.45,
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(defaultPadding),
@@ -74,9 +91,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   SizedBox(
-                    height: size.height > 700
-                        ? size.height * 0.1
-                        : defaultPadding,
+                    height:
+                        size.height > 700 ? size.height * 0.1 : defaultPadding,
                   ),
                   SizedBox(
                     width: double.infinity,

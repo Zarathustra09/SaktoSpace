@@ -12,7 +12,8 @@ import 'package:shop/services/cart/cart_service.dart';
 import 'package:shop/route/screen_export.dart';
 import 'package:shop/screens/reviews/view/product_reviews_screen.dart'; // ADDED
 
-import 'components/notify_me_card.dart';
+// Removed notify card import as the feature has been temporarily disabled.
+// import 'components/notify_me_card.dart';
 import 'components/product_images.dart';
 import 'components/product_info.dart';
 import 'components/product_list_tile.dart';
@@ -81,7 +82,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+                    const Icon(Icons.error_outline,
+                        size: 64, color: Colors.grey),
                     const SizedBox(height: 16),
                     const Text('Error loading product'),
                     const SizedBox(height: 8),
@@ -95,7 +97,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       onPressed: () {
                         setState(() {
                           // Retry via show endpoint as well
-                          _productFuture = _productService.getProductById(productId!);
+                          _productFuture =
+                              _productService.getProductById(productId!);
                         });
                       },
                       child: const Text('Retry'),
@@ -134,12 +137,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             // Compute safe rating counts and denominator for progress bars
             final int oneStar = _safeRatingCount(product.ratingBreakdown?['1']);
             final int twoStar = _safeRatingCount(product.ratingBreakdown?['2']);
-            final int threeStar = _safeRatingCount(product.ratingBreakdown?['3']);
-            final int fourStar = _safeRatingCount(product.ratingBreakdown?['4']);
-            final int fiveStar = _safeRatingCount(product.ratingBreakdown?['5']);
+            final int threeStar =
+                _safeRatingCount(product.ratingBreakdown?['3']);
+            final int fourStar =
+                _safeRatingCount(product.ratingBreakdown?['4']);
+            final int fiveStar =
+                _safeRatingCount(product.ratingBreakdown?['5']);
 
             final int totalFromApi = product.totalRatings ?? 0;
-            final int sumFromBreakdown = oneStar + twoStar + threeStar + fourStar + fiveStar;
+            final int sumFromBreakdown =
+                oneStar + twoStar + threeStar + fourStar + fiveStar;
 
             // Pick denominator: prefer breakdown sum when available, else API total, else 1 (but avoid building bars when zero)
             final int reviewDenominator = sumFromBreakdown > 0
@@ -158,10 +165,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         );
                       },
                     )
-                  : NotifyMeCard(
-                      isNotify: false,
-                      onChanged: (value) {},
-                    ),
+                  : null, // NotifyMeCard is temporarily disabled/commented out.
               body: CustomScrollView(
                 slivers: [
                   SliverAppBar(
@@ -172,16 +176,20 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         onPressed: () async {
                           if (productId != null) {
                             try {
-                              final result = await _cartService.addToCart(productId: productId!, quantity: 1);
+                              final result = await _cartService.addToCart(
+                                  productId: productId!, quantity: 1);
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(result['message'] ?? 'Added to cart!')),
+                                  SnackBar(
+                                      content: Text(result['message'] ??
+                                          'Added to cart!')),
                                 );
                               }
                             } catch (e) {
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error: ${e.toString()}')),
+                                  SnackBar(
+                                      content: Text('Error: ${e.toString()}')),
                                 );
                               }
                             }
@@ -211,7 +219,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   // show formatted Philippine Peso price prominently
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: defaultPadding, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: defaultPadding, vertical: 8),
                       child: Text(
                         formatPeso(product.price),
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -257,12 +266,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     isShowBottomBorder: true,
                     press: () {
                       final idToPass = product.id;
-                      print('[ProductDetails] Navigating to reviews with productId: $idToPass');
+                      print(
+                          '[ProductDetails] Navigating to reviews with productId: $idToPass');
                       // Push via constructor to guarantee productId is delivered
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => ProductReviewsScreen(productId: idToPass),
+                          builder: (_) =>
+                              ProductReviewsScreen(productId: idToPass),
                         ),
                       );
                     },
@@ -312,10 +323,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   image: getFullImageUrl(
                                       relatedProducts[index].image),
                                   title: relatedProducts[index].name,
-                                  brandName: relatedProducts[index]
-                                          .category
-                                          ?.name ??
-                                      "Unknown",
+                                  brandName:
+                                      relatedProducts[index].category?.name ??
+                                          "Unknown",
                                   price: relatedProducts[index].price,
                                   press: () {
                                     Navigator.pushReplacementNamed(
