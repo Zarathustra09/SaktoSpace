@@ -31,6 +31,7 @@
 /build/
 /android/app/src/main/java
 
+node_modules/
 
 # Web related
 lib/generated_plugin_registrant.dart

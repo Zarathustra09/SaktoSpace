@@ -26,7 +26,7 @@ class _HomeBotPageState extends State<HomeBotPage> {
     _messages.add(
       ChatMessage(
         text:
-            "Hello! I'm SaktoBot 🤖 I'm here to help you with questions about Sakto Space, our furniture AR app. How can I assist you today?",
+            "Hello! I'm SaktoBot 🤖 I'm here to help you with questions about Sakto Space, our AR-enabled furniture app. How can I assist you today?",
         user: _bot,
         createdAt: DateTime.now(),
       ),

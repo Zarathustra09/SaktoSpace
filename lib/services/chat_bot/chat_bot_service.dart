@@ -3,45 +3,63 @@ import 'package:http/http.dart' as http;
 import 'package:shop/constants.dart';
 
 class ChatBotService {
-  static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+  static const String _baseUrl = 'https://api.openai.com/v1/chat/completions';
 
   static Future<String> generateResponse(String userMessage) async {
     try {
+      print('[ChatBotService] Sending request to: $_baseUrl');
+      print('[ChatBotService] API Key exists: ${OPENAI_API_KEY.isNotEmpty}');
+
       final response = await http.post(
         Uri.parse(_baseUrl),
         headers: {
-          'x-goog-api-key': GOOGLE_GEMINI_API_KEY,
+          'Authorization': 'Bearer $OPENAI_API_KEY',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          "system_instruction": {
-            "parts": [
-              {
-                "text":
-                    "You are a chatbot named SaktoBot. You are to help answer basic questions about our app name Sakto Space. A ecommerce furniture AR enabled app."
-              }
-            ]
-          },
-          "contents": [
+          "model": "gpt-3.5-turbo",
+          "messages": [
             {
-              "parts": [
-                {"text": userMessage}
-              ]
-            }
-          ]
+              "role": "system",
+              "content":
+                  "You are SaktoBot, a helpful assistant for Sakto Space - an AR-enabled furniture ecommerce app. Keep responses brief and helpful."
+            },
+            {"role": "user", "content": userMessage}
+          ],
+          "max_tokens": 150,
+          "temperature": 0.7,
         }),
       );
 
+      print('[ChatBotService] Response status: ${response.statusCode}');
+      print('[ChatBotService] Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final text = data['candidates'][0]['content']['parts'][0]['text'];
-        return text ?? 'Sorry, I couldn\'t generate a response.';
+        final text = data['choices'][0]['message']['content'];
+        return text?.trim() ?? 'Sorry, I couldn\'t generate a response.';
       } else {
-        return 'Sorry, there was an error connecting to SaktoBot.';
+        // Parse error response
+        try {
+          final errorData = jsonDecode(response.body);
+          final errorMessage = errorData['error']['message'] ?? 'Unknown error';
+
+          if (response.statusCode == 429) {
+            return 'I\'m currently experiencing high traffic. Please try again in a few minutes. 🕒';
+          } else if (response.statusCode == 401) {
+            return 'API access is currently restricted. Please check your API key configuration.';
+          } else if (response.statusCode == 403) {
+            return 'API access denied. Please verify your permissions.';
+          } else {
+            return 'Service temporarily unavailable (Error ${response.statusCode}). Please try again later.';
+          }
+        } catch (parseError) {
+          return 'Service error ${response.statusCode}. Please try again later.';
+        }
       }
     } catch (e) {
-      return 'Sorry, something went wrong. Please try again.';
+      print('[ChatBotService] Exception: $e');
+      return 'I\'m having trouble connecting right now. Please check your internet connection and try again. 📡';
     }
   }
 }

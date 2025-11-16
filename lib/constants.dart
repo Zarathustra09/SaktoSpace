@@ -83,7 +83,7 @@ const pasNotMatchErrorText = "passwords do not match";
 const String baseUrl = "https://saktospace.com/api";
 const String storageUrl = "https://saktospace.com";
 const String passwordResetUrl = "https://saktospace.com/password/reset";
-const String GOOGLE_GEMINI_API_KEY = "AIzaSyBlkBaoafLCQeWPk7yU9lVRNLv3XPqn-tM";
+const String OPENAI_API_KEY = "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";
 
 // Contact support phone (use E.164 if you have country code, e.g., +112345678912)
 const String supportPhoneNumber = '12345678912';
