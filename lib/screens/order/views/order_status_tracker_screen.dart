@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shop/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OrderStatusTrackerScreen extends StatelessWidget {
   final Map<String, dynamic> order;
@@ -42,12 +43,15 @@ class OrderStatusTrackerScreen extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.network(
-                                order['product']['image'].toString().startsWith('http')
+                                order['product']['image']
+                                        .toString()
+                                        .startsWith('http')
                                     ? order['product']['image']
                                     : '$storageUrl${order['product']['image']}',
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Icon(
-                                  Icons.chair, // Changed from Icons.furniture to Icons.chair
+                                  Icons
+                                      .chair, // Changed from Icons.furniture to Icons.chair
                                   color: Colors.grey[400],
                                   size: 30,
                                 ),
@@ -62,7 +66,10 @@ class OrderStatusTrackerScreen extends StatelessWidget {
                             children: [
                               Text(
                                 order['product_name'] ?? 'Unknown Product',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
                                       fontWeight: FontWeight.bold,
                                     ),
                                 maxLines: 2,
@@ -71,13 +78,19 @@ class OrderStatusTrackerScreen extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 'Order #${order['transaction_id'] ?? order['payment_id']}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       color: blackColor60,
                                     ),
                               ),
                               Text(
                                 'Qty: ${order['quantity']} | ${formatPeso(order['subtotal'])}',
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
                                       color: primaryColor,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -118,11 +131,17 @@ class OrderStatusTrackerScreen extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(height: 12),
-                    _buildDetailRow('Order Date', order['purchased_at']?.toString().split(' ')[0] ?? 'N/A'),
-                    _buildDetailRow('Payment Method', order['payment_method'] ?? 'N/A'),
-                    _buildDetailRow('Payment Status', order['payment_status'] ?? 'N/A'),
+                    _buildDetailRow(
+                        'Order Date',
+                        order['purchased_at']?.toString().split(' ')[0] ??
+                            'N/A'),
+                    _buildDetailRow(
+                        'Payment Method', order['payment_method'] ?? 'N/A'),
+                    _buildDetailRow(
+                        'Payment Status', order['payment_status'] ?? 'N/A'),
                     if (order['status_updated_at'] != null)
-                      _buildDetailRow('Last Updated', order['status_updated_at'].toString().split(' ')[0]),
+                      _buildDetailRow('Last Updated',
+                          order['status_updated_at'].toString().split(' ')[0]),
                     if (order['category_name'] != null)
                       _buildDetailRow('Category', order['category_name']),
                   ],
@@ -131,7 +150,8 @@ class OrderStatusTrackerScreen extends StatelessWidget {
             ),
 
             // Address Information (if available)
-            if (order['shipping_address'] != null || order['billing_address'] != null) ...[
+            if (order['shipping_address'] != null ||
+                order['billing_address'] != null) ...[
               const SizedBox(height: 16),
               Card(
                 child: Padding(
@@ -141,9 +161,10 @@ class OrderStatusTrackerScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Delivery Information',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 12),
                       if (order['shipping_address'] != null) ...[
@@ -155,7 +176,8 @@ class OrderStatusTrackerScreen extends StatelessWidget {
                         Text(order['shipping_address'].toString()),
                       ],
                       if (order['billing_address'] != null) ...[
-                        if (order['shipping_address'] != null) const SizedBox(height: 12),
+                        if (order['shipping_address'] != null)
+                          const SizedBox(height: 12),
                         const Text(
                           'Billing Address:',
                           style: TextStyle(fontWeight: FontWeight.w500),
@@ -183,24 +205,19 @@ class OrderStatusTrackerScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'Need Help?',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Text('If you have any questions about your order, please contact our customer support.'),
+                    const Text(
+                        'If you have any questions about your order, please contact our customer support.'),
                     const SizedBox(height: 8),
                     ElevatedButton.icon(
-                      onPressed: () {
-                        // TODO: Implement contact support
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Customer support will be available soon'),
-                          ),
-                        );
-                      },
+                      onPressed: () => _contactSupport(context),
                       icon: const Icon(Icons.phone, size: 16),
                       label: const Text('Contact Support'),
                       style: ElevatedButton.styleFrom(
@@ -216,6 +233,83 @@ class OrderStatusTrackerScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _contactSupport(BuildContext context) async {
+    final String phone = supportPhoneNumber;
+    final String serviceName = 'Customer Support';
+
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.phone, color: primaryColor),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('Confirm Call')),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Do you want to call $serviceName?'),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.phone, color: Colors.green, size: 18),
+                    const SizedBox(width: 8),
+                    Text(phone,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).pop(true),
+              icon: const Icon(Icons.phone, size: 16),
+              label: const Text('Call Now'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    final cleanNumber = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    final Uri telUri = Uri(scheme: 'tel', path: cleanNumber);
+
+    try {
+      if (await canLaunchUrl(telUri)) {
+        await launchUrl(telUri, mode: LaunchMode.externalApplication);
+      } else {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch phone dialer')),
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error launching phone dialer: $e')),
+      );
+    }
   }
 
   Widget _buildStatusTracker(BuildContext context) {
@@ -258,7 +352,8 @@ class OrderStatusTrackerScreen extends StatelessWidget {
       return _buildCancelledStatus(context);
     }
 
-    final int currentIndex = statuses.indexWhere((s) => s['status'] == currentStatus);
+    final int currentIndex =
+        statuses.indexWhere((s) => s['status'] == currentStatus);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -277,7 +372,8 @@ class OrderStatusTrackerScreen extends StatelessWidget {
               isCurrent: i == currentIndex,
               isCompleted: i < currentIndex,
             ),
-            if (i < statuses.length - 1) _buildConnector(isActive: i < currentIndex),
+            if (i < statuses.length - 1)
+              _buildConnector(isActive: i < currentIndex),
           ],
         ],
       ),
