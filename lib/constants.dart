@@ -85,8 +85,8 @@ const String storageUrl = "https://saktospace.com";
 const String passwordResetUrl = "https://saktospace.com/password/reset";
 const String GOOGLE_GEMINI_API_KEY = "AIzaSyBlkBaoafLCQeWPk7yU9lVRNLv3XPqn-tM";
 
-// Contact support phone (use E.164 if you have country code, e.g., +112345678912)
-const String supportPhoneNumber = '12345678912';
+// Contact support phone (use E.164 if you have country code, e.g., +109217196915)
+const String supportPhoneNumber = '09217196915';
 
 // interpunct character U+22C5
 const String kInterPunctChr = '\u22C5';
