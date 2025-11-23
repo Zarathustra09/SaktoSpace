@@ -688,10 +688,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 if (value == null || value.trim().isEmpty) {
                   return 'Please enter contact number';
                 }
-                // basic phone validation: only digits and optional leading +
+                // Remove all non-digit characters except +
                 final cleaned = value.replaceAll(RegExp(r'[^\d+]'), '');
-                if (!RegExp(r'^\+?\d{7,15}\$').hasMatch(cleaned)) {
-                  return 'Enter a valid contact number';
+                // Remove + if it exists to count only digits
+                final digitsOnly = cleaned.replaceAll('+', '');
+
+                // Check if we have at least 7 digits and at most 15 digits
+                if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+                  return 'Enter a valid contact number (7-15 digits)';
                 }
                 return null;
               },
