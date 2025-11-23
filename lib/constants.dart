@@ -80,8 +80,8 @@ final emaildValidator = MultiValidator([
 
 const pasNotMatchErrorText = "passwords do not match";
 
-const String baseUrl = "https://saktospace.com/api";
-const String storageUrl = "https://saktospace.com";
+const String baseUrl = "http://192.168.100.242/api";
+const String storageUrl = "http://192.168.100.242";
 const String passwordResetUrl = "https://saktospace.com/password/reset";
 const String OPENAI_API_KEY =
     "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";
