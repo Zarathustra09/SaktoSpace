@@ -40,40 +40,43 @@ class BannerMDynamic extends StatelessWidget {
                 // Background Image
                 if (advertisement.imageUrl != null)
                   Positioned.fill(
-                    child: Image.network(
-                      advertisement.imageUrl!,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) {
-                          print('[BannerMDynamic] Image loaded successfully: ${advertisement.imageUrl}');
-                          return child;
-                        }
-                        final progress = loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null;
-                        print('[BannerMDynamic] Loading image... Progress: ${progress != null ? (progress * 100).toStringAsFixed(1) : "unknown"}%');
-                        return Center(
-                          child: CircularProgressIndicator(
-                            value: progress,
-                            color: Colors.white,
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        print('[BannerMDynamic] ERROR loading image: $error');
-                        print('[BannerMDynamic] Failed URL: ${advertisement.imageUrl}');
-                        // Show gradient background if image fails to load
-                        return Container(
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [primaryColor, accentBlueColor],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                    child: Hero(
+                      tag: 'promo_image_${advertisement.id}',
+                      child: Image.network(
+                        advertisement.imageUrl!,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) {
+                            print('[BannerMDynamic] Image loaded successfully: ${advertisement.imageUrl}');
+                            return child;
+                          }
+                          final progress = loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null;
+                          print('[BannerMDynamic] Loading image... Progress: ${progress != null ? (progress * 100).toStringAsFixed(1) : "unknown"}%');
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: progress,
+                              color: Colors.white,
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          print('[BannerMDynamic] ERROR loading image: $error');
+                          print('[BannerMDynamic] Failed URL: ${advertisement.imageUrl}');
+                          // Show gradient background if image fails to load
+                          return Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [primaryColor, accentBlueColor],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   )
                 else

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shop/components/Banner/M/banner_m_style_1.dart';
 import 'package:shop/components/Banner/M/banner_m_style_2.dart';
 import 'package:shop/components/Banner/M/banner_m_style_3.dart';
@@ -11,6 +12,7 @@ import 'package:shop/models/promotional_advertisement.dart';
 import 'package:shop/services/promotion/promotional_service.dart';
 
 import 'package:shop/constants.dart';
+import 'promotion_detail_page.dart';
 
 class OffersCarousel extends StatefulWidget {
   const OffersCarousel({
@@ -112,6 +114,141 @@ class _OffersCarouselState extends State<OffersCarousel> {
     super.dispose();
   }
 
+  void _showPromotionDetails(PromotionalAdvertisement promo) {
+    print('[OffersCarousel] Opening details for promo: ${promo.title}');
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        final dateFmt = DateFormat('MMM d, y');
+        String dateRange = '';
+        if (promo.startDate != null || promo.endDate != null) {
+          final start = promo.startDate != null ? dateFmt.format(promo.startDate!) : 'Started';
+          final end = promo.endDate != null ? dateFmt.format(promo.endDate!) : 'Ongoing';
+          dateRange = '$start  •  $end';
+        }
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.black26,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (promo.imageUrl != null)
+                  Hero(
+                    tag: 'promo_image_${promo.id}',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Image.network(
+                          promo.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: Colors.grey[300],
+                            alignment: Alignment.center,
+                            child: const Icon(Icons.broken_image),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      promo.title,
+                      style: const TextStyle(
+                        fontFamily: grandisExtendedFont,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                if (promo.description != null && promo.description!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        promo.description!,
+                        style: const TextStyle(fontSize: 14, height: 1.35),
+                      ),
+                    ),
+                  ),
+                if (dateRange.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.event, size: 16, color: Colors.black54),
+                        const SizedBox(width: 6),
+                        Text(
+                          dateRange,
+                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.open_in_full),
+                          label: const Text('Open Full Page'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => PromotionDetailPage(promotion: promo),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        tooltip: 'Close',
+                        onPressed: () => Navigator.pop(ctx),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -151,9 +288,7 @@ class _OffersCarouselState extends State<OffersCarousel> {
               print('[OffersCarousel] Building dynamic banner: ${_promotions[index].title}');
               return BannerMDynamic(
                 advertisement: _promotions[index],
-                press: () {
-                  print('[OffersCarousel] Tapped promo: ${_promotions[index].title}');
-                },
+                press: () => _showPromotionDetails(_promotions[index]),
               );
             },
           ),
