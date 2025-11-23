@@ -14,23 +14,17 @@ class PaymentService {
     required String paymentMethod,
     required String billingAddress,
     required String shippingAddress,
-    String? recipientName,
-    String? recipientContact,
     String? orderId,
     String? status,
+    double shippingFee = 0.0,
+    Map<String, dynamic>? metadata,
   }) async {
     print('=== DIRECT PAYMENT SERVICE CALL ===');
 
     final url = Uri.parse('$baseUrl/payment/direct');
-    print('Payment URL: $url');
-
     final headers = await _authService.getHeaders();
-    print('Request Headers: $headers');
 
-    // Set payment status based on payment method using new constants
     String paymentStatus = status ?? _getPaymentStatusFromMethod(paymentMethod);
-    print('Payment Method: $paymentMethod');
-    print('Auto-determined Payment Status: $paymentStatus');
 
     final requestBody = {
       'product_id': productId,
@@ -38,10 +32,10 @@ class PaymentService {
       'payment_method': paymentMethod,
       'billing_address': billingAddress,
       'shipping_address': shippingAddress,
-      if (recipientName != null) 'recipient_name': recipientName,
-      if (recipientContact != null) 'recipient_contact': recipientContact,
       'status': paymentStatus,
+      'shipping_fee': shippingFee,
       if (orderId != null) 'order_id': orderId,
+      if (metadata != null) 'metadata': metadata,
     };
 
     final body = jsonEncode(requestBody);
@@ -119,31 +113,26 @@ class PaymentService {
     required String paymentMethod,
     required String billingAddress,
     required String shippingAddress,
-    String? recipientName,
-    String? recipientContact,
     String? orderId,
     String? status,
-    List<Map<String, dynamic>>?
-        cartItems, // Add this parameter for direct purchases
+    List<Map<String, dynamic>>? cartItems,
+    double shippingFee = 0.0,
+    Map<String, dynamic>? metadata,
   }) async {
     final url = Uri.parse('$baseUrl/payment/process');
     final headers = await _authService.getHeaders();
 
-    // Set payment status based on payment method using new constants
     String paymentStatus = status ?? _getPaymentStatusFromMethod(paymentMethod);
-    print('Payment Method: $paymentMethod');
-    print('Auto-determined Payment Status: $paymentStatus');
 
     final requestBody = {
       'payment_method': paymentMethod,
       'billing_address': billingAddress,
       'shipping_address': shippingAddress,
-      if (recipientName != null) 'recipient_name': recipientName,
-      if (recipientContact != null) 'recipient_contact': recipientContact,
       'status': paymentStatus,
+      'shipping_fee': shippingFee,
       if (orderId != null) 'order_id': orderId,
-      if (cartItems != null && cartItems.isNotEmpty)
-        'items': cartItems, // Include items for direct purchase
+      if (cartItems != null && cartItems.isNotEmpty) 'items': cartItems,
+      if (metadata != null) 'metadata': metadata,
     };
 
     final body = jsonEncode(requestBody);
