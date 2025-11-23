@@ -107,3 +107,14 @@ String formatPeso(dynamic amount) {
   }
   return '$pesoSymbol${value.toStringAsFixed(2)}';
 }
+
+// Shipping Fee Constants
+const double freeShippingThreshold =
+    1000.0; // Free shipping for orders >= ₱1000
+const double standardShippingFee = 50.0; // Standard shipping fee
+const double expressShippingFee = 100.0; // Express shipping fee (optional)
+
+// GCash Payment Constants
+const String gcashMerchantNumber =
+    "09171234567"; // Replace with your GCash number
+const String gcashMerchantName = "Sakto Space";

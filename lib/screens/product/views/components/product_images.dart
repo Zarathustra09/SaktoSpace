@@ -14,6 +14,7 @@ import 'package:vector_math/vector_math_64.dart' as vector;
 import '/components/network_image_with_loader.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:dio/dio.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
@@ -223,6 +224,7 @@ class _CustomARSceneState extends State<CustomARScene> {
   bool isLoading = true;
   String statusMessage = 'Move your device to detect surfaces...';
   int loadAttempts = 0;
+  double currentScale = 0.2; // Track current scale of the object
 
   // Model caching
   String? cachedModelPath;
@@ -502,7 +504,7 @@ class _CustomARSceneState extends State<CustomARScene> {
             isPlaced = true;
             isLoading = false;
             statusMessage =
-                'Use gestures to move or rotate ${widget.productName}';
+                'Use gestures to move, rotate, or resize ${widget.productName}';
           });
         } else {
           throw Exception('Failed to add node - returned false');
@@ -675,37 +677,93 @@ class _CustomARSceneState extends State<CustomARScene> {
   Widget _buildControls() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: isPlaced ? () => _resetObject() : null,
-              icon: const Icon(Icons.refresh, size: 20),
-              label: const Text('Reset'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isPlaced ? Colors.white24 : Colors.white12,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                disabledBackgroundColor: Colors.white12,
-                disabledForegroundColor: Colors.white38,
+          // Scale controls
+          if (isPlaced)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: () => _scaleObject(-0.05),
+                    icon: const Icon(Icons.remove_circle_outline,
+                        color: Colors.white),
+                    tooltip: 'Decrease size',
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Size',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                        ),
+                      ),
+                      Text(
+                        '${(currentScale * 100).toStringAsFixed(0)}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () => _scaleObject(0.05),
+                    icon: const Icon(Icons.add_circle_outline,
+                        color: Colors.white),
+                    tooltip: 'Increase size',
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: isPlaced ? () => _takeScreenshot() : null,
-              icon: const Icon(Icons.camera_alt, size: 20),
-              label: const Text('Capture'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    isPlaced ? Theme.of(context).primaryColor : Colors.white12,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                disabledBackgroundColor: Colors.white12,
-                disabledForegroundColor: Colors.white38,
+          // Main controls
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: isPlaced ? () => _resetObject() : null,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  label: const Text('Reset'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isPlaced ? Colors.white24 : Colors.white12,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    disabledBackgroundColor: Colors.white12,
+                    disabledForegroundColor: Colors.white38,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: isPlaced ? () => _takeScreenshot() : null,
+                  icon: const Icon(Icons.camera_alt, size: 20),
+                  label: const Text('Capture'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isPlaced
+                        ? Theme.of(context).primaryColor
+                        : Colors.white12,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    disabledBackgroundColor: Colors.white12,
+                    disabledForegroundColor: Colors.white38,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -737,6 +795,7 @@ class _CustomARSceneState extends State<CustomARScene> {
         productNode = null;
         currentAnchor = null;
         isPlaced = false;
+        currentScale = 0.2;
         statusMessage = 'Tap on a surface to place ${widget.productName}';
       });
     }
@@ -925,7 +984,8 @@ class _CustomARSceneState extends State<CustomARScene> {
   void onPanEnded(String nodeName, vector.Matrix4 newTransform) {
     debugPrint("Ended panning node: $nodeName");
     setState(() {
-      statusMessage = 'Use gestures to move or rotate ${widget.productName}';
+      statusMessage =
+          'Use gestures to move, rotate, or resize ${widget.productName}';
     });
 
     // Update the node's transform if you want to keep it in sync
@@ -948,12 +1008,41 @@ class _CustomARSceneState extends State<CustomARScene> {
   void onRotationEnded(String nodeName, vector.Matrix4 newTransform) {
     debugPrint("Ended rotating node: $nodeName");
     setState(() {
-      statusMessage = 'Use gestures to move or rotate ${widget.productName}';
+      statusMessage =
+          'Use gestures to move, rotate, or resize ${widget.productName}';
     });
 
     // Update the node's transform if you want to keep it in sync
     if (productNode != null && productNode!.name == nodeName) {
       productNode!.transform = newTransform;
     }
+  }
+
+  // Programmatic scale method for button controls
+  void _scaleObject(double delta) {
+    if (productNode == null) return;
+
+    // Calculate new scale with bounds (min: 0.05, max: 1.0)
+    final newScale = max(0.05, min(1.0, currentScale + delta));
+
+    if (newScale == currentScale) return; // No change needed
+
+    setState(() {
+      currentScale = newScale;
+    });
+
+    // Create a new transform matrix similar to localandwebobjectexample.txt
+    // Extract current position from the existing transform
+    final currentTransform = productNode!.transform;
+    final translation = currentTransform.getTranslation();
+
+    // Build new transform with same position but new scale
+    final updatedTransform = vector.Matrix4.identity();
+    updatedTransform.setTranslation(translation);
+    updatedTransform.scale(newScale);
+
+    productNode!.transform = updatedTransform;
+
+    debugPrint('Scaled object to: ${(newScale * 100).toStringAsFixed(0)}%');
   }
 }
