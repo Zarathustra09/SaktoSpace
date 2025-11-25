@@ -868,7 +868,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Text('Transaction ID: ${paymentData['transaction_id'] ?? 'N/A'}'),
               const SizedBox(height: 8),
               Text(
-                'Amount: $pesoSymbol${paymentData['amount'] ?? widget.total.toStringAsFixed(2)}',
+                'Amount: $pesoSymbol${paymentData['total_amount']?.toString() ?? paymentData['amount']?.toString() ?? _totalWithShipping.toStringAsFixed(2)}',
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
