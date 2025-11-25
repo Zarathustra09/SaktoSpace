@@ -224,7 +224,7 @@ class _CustomARSceneState extends State<CustomARScene> {
   bool isLoading = true;
   String statusMessage = 'Move your device to detect surfaces...';
   int loadAttempts = 0;
-  double currentScale = 0.2; // Track current scale of the object
+  // double currentScale = 0.2; // Track current scale of the object - DISABLED
 
   // Model caching
   String? cachedModelPath;
@@ -504,7 +504,7 @@ class _CustomARSceneState extends State<CustomARScene> {
             isPlaced = true;
             isLoading = false;
             statusMessage =
-                'Use gestures to move, rotate, or resize ${widget.productName}';
+                'Use gestures to move or rotate ${widget.productName}';
           });
         } else {
           throw Exception('Failed to add node - returned false');
@@ -680,6 +680,8 @@ class _CustomARSceneState extends State<CustomARScene> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // SCALE CONTROLS DISABLED
+          /*
           // Scale controls
           if (isPlaced)
             Container(
@@ -729,6 +731,7 @@ class _CustomARSceneState extends State<CustomARScene> {
                 ],
               ),
             ),
+          */
           // Main controls
           Row(
             children: [
@@ -795,7 +798,7 @@ class _CustomARSceneState extends State<CustomARScene> {
         productNode = null;
         currentAnchor = null;
         isPlaced = false;
-        currentScale = 0.2;
+        // currentScale = 0.2; // DISABLED
         statusMessage = 'Tap on a surface to place ${widget.productName}';
       });
     }
@@ -984,8 +987,7 @@ class _CustomARSceneState extends State<CustomARScene> {
   void onPanEnded(String nodeName, vector.Matrix4 newTransform) {
     debugPrint("Ended panning node: $nodeName");
     setState(() {
-      statusMessage =
-          'Use gestures to move, rotate, or resize ${widget.productName}';
+      statusMessage = 'Use gestures to move or rotate ${widget.productName}';
     });
 
     // Update the node's transform if you want to keep it in sync
@@ -1008,8 +1010,7 @@ class _CustomARSceneState extends State<CustomARScene> {
   void onRotationEnded(String nodeName, vector.Matrix4 newTransform) {
     debugPrint("Ended rotating node: $nodeName");
     setState(() {
-      statusMessage =
-          'Use gestures to move, rotate, or resize ${widget.productName}';
+      statusMessage = 'Use gestures to move or rotate ${widget.productName}';
     });
 
     // Update the node's transform if you want to keep it in sync
@@ -1018,6 +1019,8 @@ class _CustomARSceneState extends State<CustomARScene> {
     }
   }
 
+  // RESIZE FEATURE DISABLED
+  /*
   // Programmatic scale method for button controls
   void _scaleObject(double delta) {
     if (productNode == null) return;
@@ -1045,4 +1048,5 @@ class _CustomARSceneState extends State<CustomARScene> {
 
     debugPrint('Scaled object to: ${(newScale * 100).toStringAsFixed(0)}%');
   }
+  */
 }
