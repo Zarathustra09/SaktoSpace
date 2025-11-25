@@ -111,8 +111,8 @@ String formatPeso(dynamic amount) {
 // Shipping Fee Constants
 const double freeShippingThreshold =
     999999999.0; // Free shipping disabled (set to very high value)
-const double standardShippingFee = 50.0; // Standard shipping fee
-const double expressShippingFee = 100.0; // Express shipping fee (optional)
+const double standardShippingFee = 200.0; // Standard shipping fee
+const double expressShippingFee = 300.0; // Express shipping fee (optional)
 
 // GCash Payment Constants
 const String gcashMerchantNumber =
