@@ -29,6 +29,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
   final _billingAddressController = TextEditingController();
   final _shippingAddressController = TextEditingController();
+  final _shippingNameController = TextEditingController();
+  final _shippingContactController = TextEditingController();
 
   // GCash payment fields
   final _gcashNumberController = TextEditingController();
@@ -64,6 +66,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void dispose() {
     _billingAddressController.dispose();
     _shippingAddressController.dispose();
+    _shippingNameController.dispose();
+    _shippingContactController.dispose();
     _gcashNumberController.dispose();
     _gcashReferenceController.dispose();
     super.dispose();
@@ -116,6 +120,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           paymentMethod: _selectedPaymentMethod,
           billingAddress: billingAddress,
           shippingAddress: _shippingAddressController.text,
+          recipientName: _shippingNameController.text,
+          recipientContact: _shippingContactController.text,
           shippingFee: _shippingFee,
           metadata: shippingMetadata,
         );
@@ -136,6 +142,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           paymentMethod: _selectedPaymentMethod,
           billingAddress: billingAddress,
           shippingAddress: _shippingAddressController.text,
+          recipientName: _shippingNameController.text,
+          recipientContact: _shippingContactController.text,
           cartItems: paymentItems,
           shippingFee: _shippingFee,
           metadata: shippingMetadata,
@@ -605,6 +613,44 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
+            ),
+            const SizedBox(height: 12),
+            // Recipient name
+            TextFormField(
+              controller: _shippingNameController,
+              decoration: const InputDecoration(
+                labelText: 'Recipient Name',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter recipient name';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            // Recipient contact number
+            TextFormField(
+              controller: _shippingContactController,
+              decoration: const InputDecoration(
+                labelText: 'Contact Number',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter contact number';
+                }
+                // basic phone validation: only digits and optional leading +
+                final cleaned = value.replaceAll(RegExp(r'[^\d+]'), '');
+                if (!RegExp(r'^\+?\d{7,15}$').hasMatch(cleaned)) {
+                  return 'Enter a valid contact number';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 12),
             TextFormField(
