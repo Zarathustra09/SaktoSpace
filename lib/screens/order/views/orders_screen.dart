@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:shop/constants.dart';
 import 'package:shop/services/orders/order_service.dart';
 import 'package:shop/screens/order/views/order_status_tracker_screen.dart';
@@ -11,7 +11,8 @@ class OrdersScreen extends StatefulWidget {
   State<OrdersScreen> createState() => _OrdersScreenState();
 }
 
-class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderStateMixin {
+class _OrdersScreenState extends State<OrdersScreen>
+    with SingleTickerProviderStateMixin {
   final OrderService _orderService = OrderService();
   List<Map<String, dynamic>> _orders = []; // Changed from _payments to _orders
   Map<String, dynamic>? _orderStats;
@@ -185,11 +186,16 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                         ),
                   ),
                   const SizedBox(height: 16),
-                  _buildStatRow('Total Orders', '${_orderStats!['total_orders'] ?? 0}'),
-                  _buildStatRow('Total Payments', '${_orderStats!['total_payments'] ?? 0}'),
-                  _buildStatRow('Total Spent', formatPeso(_orderStats!['total_spent'])),
-                  _buildStatRow('Items Purchased', '${_orderStats!['total_items_purchased'] ?? 0}'),
-                  _buildStatRow('Average Order Value', formatPeso(_orderStats!['average_order_value'])),
+                  _buildStatRow(
+                      'Total Orders', '${_orderStats!['total_orders'] ?? 0}'),
+                  _buildStatRow('Total Payments',
+                      '${_orderStats!['total_payments'] ?? 0}'),
+                  _buildStatRow(
+                      'Total Spent', formatPeso(_orderStats!['total_spent'])),
+                  _buildStatRow('Items Purchased',
+                      '${_orderStats!['total_items_purchased'] ?? 0}'),
+                  _buildStatRow('Average Order Value',
+                      formatPeso(_orderStats!['average_order_value'])),
                 ],
               ),
             ),
@@ -211,7 +217,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                   ),
                   const SizedBox(height: 16),
                   if (_orderStats!['payments_by_status'] != null)
-                    ..._buildPaymentStatusRows(_orderStats!['payments_by_status']),
+                    ..._buildPaymentStatusRows(
+                        _orderStats!['payments_by_status']),
                 ],
               ),
             ),
@@ -259,7 +266,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             Expanded(
               child: Text(
                 status,
-                style: TextStyle(color: statusColor, fontWeight: FontWeight.w500),
+                style:
+                    TextStyle(color: statusColor, fontWeight: FontWeight.w500),
               ),
             ),
             Container(
@@ -299,7 +307,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             Expanded(
               child: Text(
                 status,
-                style: TextStyle(color: statusColor, fontWeight: FontWeight.w500),
+                style:
+                    TextStyle(color: statusColor, fontWeight: FontWeight.w500),
               ),
             ),
             Container(
@@ -402,6 +411,40 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     );
   }
 
+  // Helper method to extract shipping fee from order data
+  double _getShippingFee(Map<String, dynamic> order) {
+    // NOTE: Backend needs to be updated to include shipping_fee and metadata from payments table
+    // The /orders endpoint should JOIN payments table on payment_id and include these fields
+
+    // Try to get shipping fee directly (will work once backend is fixed)
+    if (order['shipping_fee'] != null) {
+      final fee = order['shipping_fee'];
+      if (fee is num) return fee.toDouble();
+      if (fee is String) return double.tryParse(fee) ?? 0.0;
+    }
+
+    // Try to get from metadata (will work once backend is fixed)
+    if (order['metadata'] != null) {
+      var metadata = order['metadata'];
+      if (metadata is String) {
+        try {
+          metadata = jsonDecode(metadata);
+        } catch (e) {
+          // Silently handle JSON parse errors
+        }
+      }
+      if (metadata is Map && metadata['shipping_fee'] != null) {
+        final fee = metadata['shipping_fee'];
+        if (fee is num) return fee.toDouble();
+        if (fee is String) return double.tryParse(fee) ?? 0.0;
+      }
+    }
+
+    // Temporary fallback: Use 0 for now since backend doesn't include shipping_fee
+    // TODO: Backend needs to include shipping_fee from payments table
+    return 0.0;
+  }
+
   Widget _buildOrdersList() {
     return ListView.builder(
       padding: const EdgeInsets.all(defaultPadding),
@@ -414,6 +457,16 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
         final paymentStatusColor = _getPaymentStatusColor(paymentStatus);
         final orderStatusIcon = _getOrderStatusIcon(orderStatus);
         final paymentStatusIcon = _getPaymentStatusIcon(paymentStatus);
+
+        // Get shipping fee and calculate total
+        final subtotalValue = order['subtotal'] ?? 0;
+        final subtotal = subtotalValue is num
+            ? subtotalValue.toDouble()
+            : (subtotalValue is String
+                ? double.tryParse(subtotalValue) ?? 0.0
+                : 0.0);
+        final shippingFee = _getShippingFee(order);
+        final totalWithShipping = subtotal + shippingFee;
 
         return Card(
           margin: const EdgeInsets.only(bottom: defaultPadding),
@@ -439,7 +492,9 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: Image.network(
-                                  order['product']['image'].toString().startsWith('http')
+                                  order['product']['image']
+                                          .toString()
+                                          .startsWith('http')
                                       ? order['product']['image']
                                       : '$storageUrl${order['product']['image']}',
                                   fit: BoxFit.cover,
@@ -460,7 +515,10 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                           children: [
                             Text(
                               order['product_name'] ?? 'Unknown Item',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
                               maxLines: 2,
@@ -469,20 +527,47 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                             const SizedBox(height: 4),
                             Text(
                               'Order #${order['transaction_id'] ?? order['payment_id']}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
                                     color: blackColor60,
                                   ),
                             ),
                             if (order['category_name'] != null)
                               Text(
                                 'Category: ${order['category_name']}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       color: blackColor60,
                                     ),
                               ),
                             Text(
-                              'Qty: ${order['quantity']} | ${formatPeso(order['subtotal'])}',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              'Qty: ${order['quantity']} | Subtotal: ${formatPeso(subtotal)}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: blackColor60,
+                                  ),
+                            ),
+                            Text(
+                              'Shipping: ${formatPeso(shippingFee)}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: blackColor60,
+                                  ),
+                            ),
+                            Text(
+                              'Total: ${formatPeso(totalWithShipping)}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
                                     color: primaryColor,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -501,16 +586,19 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                       Flexible(
                         flex: 1,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 4),
                           decoration: BoxDecoration(
                             color: orderStatusColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: orderStatusColor.withOpacity(0.3)),
+                            border: Border.all(
+                                color: orderStatusColor.withOpacity(0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(orderStatusIcon, size: 12, color: orderStatusColor),
+                              Icon(orderStatusIcon,
+                                  size: 12, color: orderStatusColor),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Column(
@@ -529,7 +617,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                                     Text(
                                       _getOrderStatusDescription(orderStatus),
                                       style: TextStyle(
-                                        color: orderStatusColor.withOpacity(0.8),
+                                        color:
+                                            orderStatusColor.withOpacity(0.8),
                                         fontSize: 8,
                                       ),
                                       maxLines: 1,
@@ -548,16 +637,19 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                       Flexible(
                         flex: 1,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 4),
                           decoration: BoxDecoration(
                             color: paymentStatusColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: paymentStatusColor.withOpacity(0.3)),
+                            border: Border.all(
+                                color: paymentStatusColor.withOpacity(0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(paymentStatusIcon, size: 12, color: paymentStatusColor),
+                              Icon(paymentStatusIcon,
+                                  size: 12, color: paymentStatusColor),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Column(
@@ -574,9 +666,11 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     Text(
-                                      _getPaymentStatusDescription(paymentStatus),
+                                      _getPaymentStatusDescription(
+                                          paymentStatus),
                                       style: TextStyle(
-                                        color: paymentStatusColor.withOpacity(0.8),
+                                        color:
+                                            paymentStatusColor.withOpacity(0.8),
                                         fontSize: 8,
                                       ),
                                       maxLines: 1,

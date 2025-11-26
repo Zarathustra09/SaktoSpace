@@ -116,5 +116,6 @@ const double expressShippingFee = 300.0; // Express shipping fee (optional)
 
 // GCash Payment Constants
 const String gcashMerchantNumber =
-    "09171234567"; // Replace with your GCash number
-const String gcashMerchantName = "Sakto Space";
+    "09217196915"; // Replace with your GCash number
+const String gcashMerchantName =
+    "FC Home Center"; // Replace with your business name

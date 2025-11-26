@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shop/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,6 +10,61 @@ class OrderStatusTrackerScreen extends StatelessWidget {
     super.key,
     required this.order,
   });
+
+  // Helper method to extract shipping fee from order data
+  double _getShippingFee() {
+    // NOTE: Backend needs to be updated to include shipping_fee and metadata from payments table
+    // The /orders endpoint should JOIN payments table on payment_id and include these fields
+
+    // Try to get shipping fee directly (will work once backend is fixed)
+    if (order['shipping_fee'] != null) {
+      final fee = order['shipping_fee'];
+      if (fee is num) return fee.toDouble();
+      if (fee is String) return double.tryParse(fee) ?? 0.0;
+    }
+
+    // Try to get from metadata (will work once backend is fixed)
+    if (order['metadata'] != null) {
+      var metadata = order['metadata'];
+      if (metadata is String) {
+        try {
+          final decoded = jsonDecode(metadata);
+          if (decoded is Map && decoded['shipping_fee'] != null) {
+            final fee = decoded['shipping_fee'];
+            if (fee is num) return fee.toDouble();
+            if (fee is String) return double.tryParse(fee) ?? 0.0;
+          }
+        } catch (e) {
+          // Silently handle JSON parse errors
+        }
+      } else if (metadata is Map && metadata['shipping_fee'] != null) {
+        final fee = metadata['shipping_fee'];
+        if (fee is num) return fee.toDouble();
+        if (fee is String) return double.tryParse(fee) ?? 0.0;
+      }
+    }
+
+    // Temporary fallback: Use 0 for now since backend doesn't include shipping_fee
+    // TODO: Backend needs to include shipping_fee from payments table
+    return 0.0;
+  }
+
+  // Helper method to safely convert subtotal to double
+  double _getSubtotal() {
+    final subtotalValue = order['subtotal'] ?? 0;
+    if (subtotalValue is num) return subtotalValue.toDouble();
+    if (subtotalValue is String) return double.tryParse(subtotalValue) ?? 0.0;
+    return 0.0;
+  }
+
+  // Helper method to safely convert quantity to int
+  int _getQuantity() {
+    final qtyValue = order['quantity'] ?? 1;
+    if (qtyValue is int) return qtyValue;
+    if (qtyValue is String) return int.tryParse(qtyValue) ?? 1;
+    if (qtyValue is num) return qtyValue.toInt();
+    return 1;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,8 +141,46 @@ class OrderStatusTrackerScreen extends StatelessWidget {
                                       color: blackColor60,
                                     ),
                               ),
+                              if (order['category_name'] != null)
+                                Text(
+                                  'Category: ${order['category_name']}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: blackColor60,
+                                      ),
+                                ),
+                              const SizedBox(height: 8),
                               Text(
-                                'Qty: ${order['quantity']} | ${formatPeso(order['subtotal'])}',
+                                'Qty: ${_getQuantity()} × ${formatPeso(_getSubtotal() / _getQuantity())}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: blackColor60,
+                                    ),
+                              ),
+                              Text(
+                                'Subtotal: ${formatPeso(_getSubtotal())}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: blackColor60,
+                                    ),
+                              ),
+                              Text(
+                                'Shipping Fee: ${formatPeso(_getShippingFee())}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: blackColor60,
+                                    ),
+                              ),
+                              Text(
+                                'Total: ${formatPeso(_getSubtotal() + _getShippingFee())}',
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleSmall
