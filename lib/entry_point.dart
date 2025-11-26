@@ -31,7 +31,31 @@ class _EntryPointState extends State<EntryPoint> {
     super.initState();
     _loadUnread();
     // Update badge when a new foreground message arrives
-    FirebaseMessaging.onMessage.listen((_) => _loadUnread());
+    FirebaseMessaging.onMessage.listen((message) {
+      _loadUnread();
+      // Show a snackbar for promotional notifications
+      if (message.data['type'] == 'promotion' && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message.notification?.title ?? 'New Promotion'),
+            action: SnackBarAction(
+              label: 'View',
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                );
+                _loadUnread();
+              },
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    });
+
+    // Refresh badge when app comes back to foreground
+    FirebaseMessaging.onMessageOpenedApp.listen((_) => _loadUnread());
   }
 
   Future<void> _loadUnread() async {

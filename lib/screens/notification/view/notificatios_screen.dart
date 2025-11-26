@@ -184,9 +184,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, i) {
                       final n = _items[i];
-                      // No delete UI — show notification item only
+                      // Determine icon based on notification type
+                      IconData iconData = Icons.notifications;
+                      Color? iconColor;
+                      if (n.data != null) {
+                        try {
+                          final d = jsonDecode(n.data!);
+                          if (d['type'] == 'promotion') {
+                            iconData = Icons.campaign;
+                            iconColor = Colors.green;
+                          } else if (d['type'] == 'order') {
+                            iconData = Icons.shopping_bag;
+                            iconColor = Colors.blue;
+                          }
+                        } catch (_) {}
+                      }
+
                       return ListTile(
-                        leading: const CircleAvatar(child: Icon(Icons.notifications)),
+                        leading: CircleAvatar(
+                          backgroundColor: iconColor?.withOpacity(0.1),
+                          child: Icon(iconData, color: iconColor),
+                        ),
                         title: Text(n.title, maxLines: 1, overflow: TextOverflow.ellipsis),
                         subtitle: Text(n.body, maxLines: 2, overflow: TextOverflow.ellipsis),
                         trailing: Text(_ago(n.createdAt), style: Theme.of(context).textTheme.bodySmall),
