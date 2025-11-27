@@ -5,7 +5,8 @@ import 'package:shop/constants.dart';
 import 'package:shop/route/screen_export.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shop/screens/notification/view/notificatios_screen.dart'
-    show NotificationsScreen, NotificationService;
+    show NotificationsScreen;
+import 'package:shop/services/notification/notification_service.dart';
 import 'package:shop/screens/discover/views/discover_screen.dart';
 
 class EntryPoint extends StatefulWidget {
@@ -15,7 +16,7 @@ class EntryPoint extends StatefulWidget {
   State<EntryPoint> createState() => _EntryPointState();
 }
 
-class _EntryPointState extends State<EntryPoint> {
+class _EntryPointState extends State<EntryPoint> with WidgetsBindingObserver {
   // Instead of keeping a const pages list, we build it inside `build` so we can
   // pass dynamic callbacks (e.g. a back-to-home action for the chat page).
   int _currentIndex = 0;
@@ -29,6 +30,7 @@ class _EntryPointState extends State<EntryPoint> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadUnread();
     // Update badge when a new foreground message arrives
     FirebaseMessaging.onMessage.listen((message) {
@@ -58,10 +60,25 @@ class _EntryPointState extends State<EntryPoint> {
     FirebaseMessaging.onMessageOpenedApp.listen((_) => _loadUnread());
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Reload unread count when app resumes from background (BG handler may have saved to SQLite)
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadUnread();
+    }
+  }
+
   Future<void> _loadUnread() async {
     try {
       final c = await _notificationService.getUnreadCount();
-      if (mounted) setState(() => _unreadCount = c);
+      if (!mounted) return;
+      setState(() => _unreadCount = c);
     } catch (_) {}
   }
 

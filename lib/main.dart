@@ -6,42 +6,81 @@ import 'package:shop/route/router.dart' as router;
 import 'package:shop/theme/app_theme.dart';
 import 'package:shop/services/auth/login_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shop/screens/notification/view/notificatios_screen.dart' show NotificationService;
+import 'package:shop/services/notification/notification_service.dart'; // CHANGED import
+import 'package:shop/screens/notification/view/notificatios_screen.dart' show NotificationsScreen;
+
+// Global navigator key to navigate from listeners
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 // Top-level function to handle background messages
+@pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  print('[Background Handler] Handling a background message: ${message.messageId}');
-  print('[Background Handler] Background message data: ${message.data}');
-  // Save notification to SQLite
-  await NotificationService().saveFromFCM(message);
-
-  // Handle different notification types
-  final notificationType = message.data['type'];
-  switch (notificationType) {
-    case 'announcement':
-      print('[Background Handler] Received announcement notification');
-      break;
-    default:
-      print('[Background Handler] Received unknown notification type: $notificationType');
+  print('[BG] Handling message: ${message.messageId}');
+  try {
+    await NotificationService().saveFromFCM(message);
+    print('[BG] Saved to SQLite');
+  } catch (e) {
+    print('[BG] Save error: $e');
   }
+
+  final notificationType = message.data['type'];
+  print('[BG] Type: $notificationType');
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase
   await Firebase.initializeApp();
 
   // Set the background messaging handler early
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // Save foreground messages to SQLite
+  // Foreground delivery
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-    print('[Foreground] message: ${message.messageId}');
-    await NotificationService().saveFromFCM(message);
-    // Optionally show local notification here
+    print('[FG] message: ${message.messageId}');
+    try {
+      await NotificationService().saveFromFCM(message);
+      print('[FG] Saved to SQLite');
+    } catch (e) {
+      print('[FG] Save error: $e');
+    }
   });
+
+  // Tapped from background
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+    print('[OPENED] message: ${message.messageId}');
+    try {
+      await NotificationService().saveFromFCM(message);
+      print('[OPENED] Saved to SQLite');
+    } catch (e) {
+      print('[OPENED] Save error: $e');
+    }
+    // Navigate to notifications screen
+    final nav = appNavigatorKey.currentState;
+    if (nav != null) {
+      nav.push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+    }
+  });
+
+  // Launched from terminated by tapping notification
+  final RemoteMessage? initialMessage =
+      await FirebaseMessaging.instance.getInitialMessage();
+  if (initialMessage != null) {
+    print('[INITIAL] message: ${initialMessage.messageId}');
+    try {
+      await NotificationService().saveFromFCM(initialMessage);
+      print('[INITIAL] Saved to SQLite');
+    } catch (e) {
+      print('[INITIAL] Save error: $e');
+    }
+    // Delay navigation until app is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final nav = appNavigatorKey.currentState;
+      if (nav != null) {
+        nav.push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+      }
+    });
+  }
 
   final String initialRoute = await _determineInitialRoute();
   runApp(MyApp(initialRoute: initialRoute));
@@ -96,6 +135,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.light,
       onGenerateRoute: router.generateRoute,
       initialRoute: initialRoute,
+      navigatorKey: appNavigatorKey, // added
     );
   }
 }
