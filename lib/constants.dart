@@ -83,7 +83,11 @@ const pasNotMatchErrorText = "passwords do not match";
 const String baseUrl = "https://saktospace.com/api";
 const String storageUrl = "https://saktospace.com";
 const String passwordResetUrl = "https://saktospace.com/password/reset";
-const String GOOGLE_GEMINI_API_KEY = "AIzaSyAQh0IjFuZ6QzTtIeENlptF3TO4epb1H-w";
+const String OPENAI_API_KEY =
+    "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";
+
+// Contact support phone (use E.164 if you have country code, e.g., +109217196915)
+const String supportPhoneNumber = '09217196915';
 
 // interpunct character U+22C5
 const String kInterPunctChr = '\u22C5';
@@ -103,3 +107,15 @@ String formatPeso(dynamic amount) {
   }
   return '$pesoSymbol${value.toStringAsFixed(2)}';
 }
+
+// Shipping Fee Constants
+const double freeShippingThreshold =
+    999999999.0; // Free shipping disabled (set to very high value)
+const double standardShippingFee = 200.0; // Standard shipping fee
+const double expressShippingFee = 300.0; // Express shipping fee (optional)
+
+// GCash Payment Constants
+const String gcashMerchantNumber =
+    "09217196915"; // Replace with your GCash number
+const String gcashMerchantName =
+    "FC Home Center"; // Replace with your business name

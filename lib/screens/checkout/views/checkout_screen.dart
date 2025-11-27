@@ -29,15 +29,33 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
   final _billingAddressController = TextEditingController();
   final _shippingAddressController = TextEditingController();
+  final _shippingNameController = TextEditingController();
+  final _shippingContactController = TextEditingController();
+
+  // GCash payment fields
+  final _gcashNumberController = TextEditingController();
+  final _gcashReferenceController = TextEditingController();
 
   String _selectedPaymentMethod = 'credit_card';
+  String _selectedShippingType = 'standard'; // 'standard' or 'express'
   bool _sameAsShipping = true;
   bool _isProcessing = false;
+
+  // Shipping fee calculation
+  double get _shippingFee {
+    if (widget.total >= freeShippingThreshold) {
+      return 0.0; // Free shipping
+    }
+    return _selectedShippingType == 'express'
+        ? expressShippingFee
+        : standardShippingFee;
+  }
+
+  double get _totalWithShipping => widget.total + _shippingFee;
 
   final List<Map<String, String>> _paymentMethods = [
     {'value': 'credit_card', 'label': 'Credit Card', 'icon': '💳'},
     {'value': 'debit_card', 'label': 'Debit Card', 'icon': '💳'},
-    // {'value': 'paypal', 'label': 'PayPal', 'icon': '📱'}, // PayPal temporarily disabled
     {'value': 'gcash', 'label': 'GCash', 'icon': '💰'},
     {'value': 'paymaya', 'label': 'PayMaya', 'icon': '💵'},
     {'value': 'bank_transfer', 'label': 'Bank Transfer', 'icon': '🏦'},
@@ -48,6 +66,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void dispose() {
     _billingAddressController.dispose();
     _shippingAddressController.dispose();
+    _shippingNameController.dispose();
+    _shippingContactController.dispose();
+    _gcashNumberController.dispose();
+    _gcashReferenceController.dispose();
     super.dispose();
   }
 
@@ -60,7 +82,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
-    print('Setting processing state to true');
+    // Special validation for GCash
+    if (_selectedPaymentMethod == 'gcash') {
+      if (!await _validateGCashPayment()) {
+        return;
+      }
+    }
+
     setState(() {
       _isProcessing = true;
     });
@@ -70,33 +98,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ? _shippingAddressController.text
           : _billingAddressController.text;
 
-      print('=== PAYMENT DATA ===');
-      print('Is Direct Purchase: ${widget.isDirectPurchase}');
-      print('Direct Purchase Data: ${widget.directPurchaseData}');
-      print('Selected Payment Method: $_selectedPaymentMethod');
-      print('Billing Address: $billingAddress');
-      print('Shipping Address: ${_shippingAddressController.text}');
-      print('Total Amount: ${widget.total}');
+      // Add shipping fee to payment metadata
+      final shippingMetadata = {
+        'shipping_type': _selectedShippingType,
+        'shipping_fee': _shippingFee,
+        'free_shipping': _shippingFee == 0.0,
+      };
+
+      // Add GCash reference if applicable
+      if (_selectedPaymentMethod == 'gcash') {
+        shippingMetadata['gcash_number'] = _gcashNumberController.text;
+        shippingMetadata['gcash_reference'] = _gcashReferenceController.text;
+      }
 
       Map<String, dynamic> result;
 
       if (widget.isDirectPurchase && widget.directPurchaseData != null) {
-        print('=== USING DIRECT PAYMENT API ===');
-        print('Product ID: ${widget.directPurchaseData!['productId']}');
-        print('Quantity: ${widget.directPurchaseData!['quantity']}');
-
-        // Use direct payment API for buy now
         result = await _paymentService.processDirectPayment(
           productId: widget.directPurchaseData!['productId'],
           quantity: widget.directPurchaseData!['quantity'],
           paymentMethod: _selectedPaymentMethod,
           billingAddress: billingAddress,
           shippingAddress: _shippingAddressController.text,
+          recipientName: _shippingNameController.text,
+          recipientContact: _shippingContactController.text,
+          shippingFee: _shippingFee,
+          metadata: shippingMetadata,
         );
-        print('Direct payment result: $result');
       } else {
-        print('=== USING CART PAYMENT API ===');
-        // Use cart payment API for cart checkout
         List<Map<String, dynamic>>? paymentItems;
         if (widget.cartItems.isNotEmpty) {
           paymentItems = widget.cartItems
@@ -104,89 +133,660 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     'product_id': item['id'] ?? item['product_id'],
                     'quantity': item['quantity'] ?? 1,
                     'price': item['price'],
-                    'name': item['name'], // Include product name for better tracking
+                    'name': item['name'],
                   })
               .toList();
-          print('Payment items from cart: $paymentItems');
         }
 
         result = await _paymentService.processPayment(
           paymentMethod: _selectedPaymentMethod,
           billingAddress: billingAddress,
           shippingAddress: _shippingAddressController.text,
+          recipientName: _shippingNameController.text,
+          recipientContact: _shippingContactController.text,
           cartItems: paymentItems,
+          shippingFee: _shippingFee,
+          metadata: shippingMetadata,
         );
-        print('Cart payment result: $result');
       }
 
-      // Validate the response structure
       if (result['success'] != true) {
         throw Exception(result['message'] ?? 'Payment processing failed');
       }
 
-      // Extract payment data - handle new structure with orders
       final paymentData = result['data'];
       if (paymentData == null) {
         throw Exception('Invalid payment response: missing payment data');
       }
 
-      print('Payment processed successfully with orders: ${paymentData['orders']?.length ?? 0}');
-
-      // Only clear cart if this is NOT a direct purchase (i.e., it's from cart)
       if (!widget.isDirectPurchase) {
-        print('Clearing cart after successful payment...');
-        try {
-          await _cartService.clearCart();
-          print('Cart cleared successfully');
-        } catch (e) {
-          print('Warning: Failed to clear cart after payment: $e');
-          // Don't fail the whole process if cart clear fails
-        }
-      } else {
-        print('Skipping cart clear for direct purchase');
+        await _cartService.clearCart();
       }
 
       if (mounted) {
-        print('Showing success dialog...');
-        // Show success dialog with payment data
+        setState(() {
+          _isProcessing = false;
+        });
         _showSuccessDialog(paymentData);
-      } else {
-        print('Widget not mounted, skipping success dialog');
       }
     } catch (e) {
-      print('=== PAYMENT ERROR ===');
-      print('Error type: ${e.runtimeType}');
-      print('Error message: $e');
-
       if (mounted) {
-        // Show more user-friendly error messages
-        String errorMessage = _getFormattedErrorMessage(e.toString());
-
+        setState(() {
+          _isProcessing = false;
+        });
+        final errorMessage = _getFormattedErrorMessage(e.toString());
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: Colors.white,
-              onPressed: () {
-                // Allow user to retry the payment
-                _processPayment();
-              },
-            ),
           ),
         );
       }
-    } finally {
-      print('Setting processing state to false');
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
-      }
     }
-    print('=== PAYMENT PROCESSING ENDED ===');
+  }
+
+  // Validate GCash payment
+  Future<bool> _validateGCashPayment() async {
+    if (_gcashNumberController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your GCash number'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+
+    if (_gcashReferenceController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter the GCash reference number'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm GCash Payment'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Please confirm your GCash payment details:'),
+            const SizedBox(height: 16),
+            Text('Amount: ${formatPeso(_totalWithShipping)}'),
+            Text('GCash Number: ${_gcashNumberController.text}'),
+            Text('Reference: ${_gcashReferenceController.text}'),
+            const SizedBox(height: 16),
+            const Text(
+              'Make sure you have sent the payment to the merchant before confirming.',
+              style: TextStyle(fontSize: 12, color: Colors.red),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    return confirmed ?? false;
+  }
+
+  // Build GCash payment form
+  Widget _buildGCashForm() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  '💰',
+                  style: TextStyle(fontSize: 24),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'GCash Payment Instructions',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Step 1: Send payment to',
+            style: TextStyle(fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  gcashMerchantNumber,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  gcashMerchantName,
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Step 2: Enter your details',
+            style: TextStyle(fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _gcashNumberController,
+            decoration: const InputDecoration(
+              labelText: 'Your GCash Number',
+              hintText: '09171234567',
+              prefixIcon: Icon(Icons.phone),
+            ),
+            keyboardType: TextInputType.phone,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your GCash number';
+              }
+              if (!RegExp(r'^09\d{9}$').hasMatch(value)) {
+                return 'Please enter a valid GCash number';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _gcashReferenceController,
+            decoration: const InputDecoration(
+              labelText: 'GCash Reference Number',
+              hintText: 'Enter reference number from receipt',
+              prefixIcon: Icon(Icons.receipt),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the reference number';
+              }
+              if (value.length < 10) {
+                return 'Reference number must be at least 10 characters';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.orange.shade700),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Your order will be verified before processing',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build shipping options
+  Widget _buildShippingOptions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Shipping Options',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Free shipping notice
+        if (widget.total >= freeShippingThreshold)
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.green.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.local_shipping, color: Colors.green.shade700),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'You qualify for FREE SHIPPING! 🎉',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Standard Shipping
+        _buildShippingOption(
+          'standard',
+          'Standard Shipping',
+          'Delivery in 3-5 business days',
+          widget.total >= freeShippingThreshold ? 0.0 : standardShippingFee,
+          Icons.local_shipping,
+        ),
+        const SizedBox(height: 12),
+
+        // Express Shipping
+        _buildShippingOption(
+          'express',
+          'Express Shipping',
+          'Delivery in 1-2 business days',
+          widget.total >= freeShippingThreshold ? 0.0 : expressShippingFee,
+          Icons.electric_bolt,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildShippingOption(
+    String value,
+    String title,
+    String description,
+    double fee,
+    IconData icon,
+  ) {
+    final isSelected = _selectedShippingType == value;
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: isSelected
+              ? Theme.of(context).primaryColor
+              : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
+        ),
+        title: Text(title),
+        subtitle: Text(description),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              fee == 0.0 ? 'FREE' : formatPeso(fee),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: fee == 0.0 ? Colors.green : Colors.black,
+              ),
+            ),
+            if (fee == 0.0)
+              Text(
+                'was ${formatPeso(value == 'express' ? expressShippingFee : standardShippingFee)}',
+                style: TextStyle(
+                  fontSize: 10,
+                  decoration: TextDecoration.lineThrough,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+          ],
+        ),
+        onTap: () {
+          setState(() {
+            _selectedShippingType = value;
+          });
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Order Summary Card
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Order Summary',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...widget.cartItems.map((item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${item['name']} x ${item['quantity']}',
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
+                              Text(
+                                formatPeso(item['subtotal']),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        )),
+                    const Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Subtotal'),
+                        Text(formatPeso(widget.total)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Shipping Fee'),
+                        Text(
+                          _shippingFee == 0.0
+                              ? 'FREE'
+                              : formatPeso(_shippingFee),
+                          style: TextStyle(
+                            color: _shippingFee == 0.0
+                                ? Colors.green
+                                : Colors.black,
+                            fontWeight: _shippingFee == 0.0
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          formatPeso(_totalWithShipping),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Shipping Options
+            _buildShippingOptions(),
+            const SizedBox(height: 24),
+
+            // Shipping Address
+            const Text(
+              'Shipping Address',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Recipient name
+            TextFormField(
+              controller: _shippingNameController,
+              decoration: const InputDecoration(
+                labelText: 'Recipient Name',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter recipient name';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            // Recipient contact number
+            TextFormField(
+              controller: _shippingContactController,
+              decoration: const InputDecoration(
+                labelText: 'Contact Number',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter contact number';
+                }
+                // basic phone validation: only digits and optional leading +
+                final cleaned = value.replaceAll(RegExp(r'[^\d+]'), '');
+                if (!RegExp(r'^\+?\d{7,15}$').hasMatch(cleaned)) {
+                  return 'Enter a valid contact number';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _shippingAddressController,
+              decoration: const InputDecoration(
+                labelText: 'Shipping Address',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.location_on),
+              ),
+              maxLines: 3,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter shipping address';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+
+            // Billing Address
+            const Text(
+              'Billing Address',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            CheckboxListTile(
+              title: const Text('Same as shipping address'),
+              value: _sameAsShipping,
+              onChanged: (value) {
+                setState(() {
+                  _sameAsShipping = value ?? true;
+                });
+              },
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+            ),
+            if (!_sameAsShipping) ...[
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _billingAddressController,
+                decoration: const InputDecoration(
+                  labelText: 'Billing Address',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
+                ),
+                maxLines: 3,
+                validator: (value) {
+                  if (!_sameAsShipping &&
+                      (value == null || value.trim().isEmpty)) {
+                    return 'Please enter billing address';
+                  }
+                  return null;
+                },
+              ),
+            ],
+            const SizedBox(height: 24),
+
+            // Payment Methods
+            const Text(
+              'Payment Method',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ..._paymentMethods.map((method) => _buildPaymentMethodTile(method)),
+
+            // GCash Form (shown only when GCash is selected)
+            if (_selectedPaymentMethod == 'gcash') ...[
+              const SizedBox(height: 16),
+              _buildGCashForm(),
+            ],
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isProcessing ? null : _processPayment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _isProcessing
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text('Processing...'),
+                        ],
+                      )
+                    : Text(
+                        'Pay ${formatPeso(_totalWithShipping)}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   /// Format error messages to be more user-friendly
@@ -208,14 +808,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
 
     // Return the clean error message or a generic one
-    return cleanError.isNotEmpty ? cleanError : 'Payment failed. Please try again.';
+    return cleanError.isNotEmpty
+        ? cleanError
+        : 'Payment failed. Please try again.';
   }
 
   void _showSuccessDialog(Map<String, dynamic> paymentData) {
     final bool isCashOnDelivery = _selectedPaymentMethod == 'cash_on_delivery';
 
     // Payment status using new constants (separate from order status)
-    final String paymentStatus = paymentData['status'] ?? (isCashOnDelivery ? 'Pending' : 'Completed');
+    final String paymentStatus =
+        paymentData['status'] ?? (isCashOnDelivery ? 'Pending' : 'Completed');
 
     // Order status (separate from payment status) - defaults to 'Preparing'
     final orderStatus = paymentData['orders']?.isNotEmpty == true
@@ -224,8 +827,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     // Handle orders count for display
     final ordersCount = paymentData['orders']?.length ??
-                      paymentData['purchased_items']?.length ??
-                      widget.cartItems.length;
+        paymentData['purchased_items']?.length ??
+        widget.cartItems.length;
 
     showDialog(
       context: context,
@@ -265,11 +868,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Text('Transaction ID: ${paymentData['transaction_id'] ?? 'N/A'}'),
               const SizedBox(height: 8),
               Text(
-                'Amount: $pesoSymbol${paymentData['amount'] ?? widget.total.toStringAsFixed(2)}',
+                'Amount: $pesoSymbol${paymentData['total_amount']?.toString() ?? paymentData['amount']?.toString() ?? _totalWithShipping.toStringAsFixed(2)}',
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
-              Text('Items: $ordersCount ${ordersCount == 1 ? 'item' : 'items'}'),
+              Text(
+                  'Items: $ordersCount ${ordersCount == 1 ? 'item' : 'items'}'),
               const SizedBox(height: 12),
 
               // Payment Status Section
@@ -278,7 +882,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 decoration: BoxDecoration(
                   color: _getPaymentStatusColor(paymentStatus).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _getPaymentStatusColor(paymentStatus).withOpacity(0.3)),
+                  border: Border.all(
+                      color: _getPaymentStatusColor(paymentStatus)
+                          .withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
@@ -303,7 +909,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           Text(
                             _getPaymentStatusDescription(paymentStatus),
                             style: TextStyle(
-                              color: _getPaymentStatusColor(paymentStatus).withOpacity(0.8),
+                              color: _getPaymentStatusColor(paymentStatus)
+                                  .withOpacity(0.8),
                               fontSize: 10,
                             ),
                           ),
@@ -321,7 +928,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 decoration: BoxDecoration(
                   color: _getOrderStatusColor(orderStatus).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _getOrderStatusColor(orderStatus).withOpacity(0.3)),
+                  border: Border.all(
+                      color:
+                          _getOrderStatusColor(orderStatus).withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
@@ -346,7 +955,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           Text(
                             _getOrderStatusDescription(orderStatus),
                             style: TextStyle(
-                              color: _getOrderStatusColor(orderStatus).withOpacity(0.8),
+                              color: _getOrderStatusColor(orderStatus)
+                                  .withOpacity(0.8),
                               fontSize: 10,
                             ),
                           ),
@@ -552,219 +1162,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             _selectedPaymentMethod = method['value']!;
           });
         },
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Checkout'),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Order Summary Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Order Summary',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ...widget.cartItems.map((item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  '${item['name']} x ${item['quantity']}',
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                              ),
-                              Text(
-                                '$kInterPunctChr $pesoSymbol${item['subtotal']}',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        )),
-                    const Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Total',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '$pesoSymbol${widget.total.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Shipping Address
-            const Text(
-              'Shipping Address',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _shippingAddressController,
-              decoration: const InputDecoration(
-                labelText: 'Shipping Address',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.location_on),
-              ),
-              maxLines: 3,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter shipping address';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // Billing Address
-            const Text(
-              'Billing Address',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            CheckboxListTile(
-              title: const Text('Same as shipping address'),
-              value: _sameAsShipping,
-              onChanged: (value) {
-                setState(() {
-                  _sameAsShipping = value ?? true;
-                });
-              },
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (!_sameAsShipping) ...[
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _billingAddressController,
-                decoration: const InputDecoration(
-                  labelText: 'Billing Address',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (!_sameAsShipping &&
-                      (value == null || value.trim().isEmpty)) {
-                    return 'Please enter billing address';
-                  }
-                  return null;
-                },
-              ),
-            ],
-            const SizedBox(height: 24),
-
-            // Payment Methods
-            const Text(
-              'Payment Method',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ..._paymentMethods.map((method) => _buildPaymentMethodTile(method)),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isProcessing ? null : _processPayment,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isProcessing
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Text('Processing...'),
-                        ],
-                      )
-                    : Text(
-                        'Pay $pesoSymbol${widget.total.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

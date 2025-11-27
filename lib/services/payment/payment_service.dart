@@ -14,21 +14,19 @@ class PaymentService {
     required String paymentMethod,
     required String billingAddress,
     required String shippingAddress,
+    String? recipientName,
+    String? recipientContact,
     String? orderId,
     String? status,
+    double shippingFee = 0.0,
+    Map<String, dynamic>? metadata,
   }) async {
     print('=== DIRECT PAYMENT SERVICE CALL ===');
 
     final url = Uri.parse('$baseUrl/payment/direct');
-    print('Payment URL: $url');
-
     final headers = await _authService.getHeaders();
-    print('Request Headers: $headers');
 
-    // Set payment status based on payment method using new constants
     String paymentStatus = status ?? _getPaymentStatusFromMethod(paymentMethod);
-    print('Payment Method: $paymentMethod');
-    print('Auto-determined Payment Status: $paymentStatus');
 
     final requestBody = {
       'product_id': productId,
@@ -37,7 +35,11 @@ class PaymentService {
       'billing_address': billingAddress,
       'shipping_address': shippingAddress,
       'status': paymentStatus,
+      'shipping_fee': shippingFee,
+      if (recipientName != null) 'recipient_name': recipientName,
+      if (recipientContact != null) 'recipient_contact': recipientContact,
       if (orderId != null) 'order_id': orderId,
+      if (metadata != null) 'metadata': metadata,
     };
 
     final body = jsonEncode(requestBody);
@@ -62,7 +64,8 @@ class PaymentService {
         print('Parsed Response Data: $responseData');
       } catch (e) {
         print('JSON Parse Error: $e');
-        throw Exception('Invalid JSON response from payment server: ${response.body}');
+        throw Exception(
+            'Invalid JSON response from payment server: ${response.body}');
       }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -74,7 +77,8 @@ class PaymentService {
           return processedResponse;
         } else {
           print('Payment failed - success flag is false');
-          String errorMessage = responseData['message'] ?? 'Payment processing failed';
+          String errorMessage =
+              responseData['message'] ?? 'Payment processing failed';
           throw Exception(errorMessage);
         }
       } else {
@@ -113,25 +117,30 @@ class PaymentService {
     required String paymentMethod,
     required String billingAddress,
     required String shippingAddress,
+    String? recipientName,
+    String? recipientContact,
     String? orderId,
     String? status,
-    List<Map<String, dynamic>>? cartItems, // Add this parameter for direct purchases
+    List<Map<String, dynamic>>? cartItems,
+    double shippingFee = 0.0,
+    Map<String, dynamic>? metadata,
   }) async {
     final url = Uri.parse('$baseUrl/payment/process');
     final headers = await _authService.getHeaders();
 
-    // Set payment status based on payment method using new constants
     String paymentStatus = status ?? _getPaymentStatusFromMethod(paymentMethod);
-    print('Payment Method: $paymentMethod');
-    print('Auto-determined Payment Status: $paymentStatus');
 
     final requestBody = {
       'payment_method': paymentMethod,
       'billing_address': billingAddress,
       'shipping_address': shippingAddress,
       'status': paymentStatus,
+      'shipping_fee': shippingFee,
+      if (recipientName != null) 'recipient_name': recipientName,
+      if (recipientContact != null) 'recipient_contact': recipientContact,
       if (orderId != null) 'order_id': orderId,
-      if (cartItems != null && cartItems.isNotEmpty) 'items': cartItems, // Include items for direct purchase
+      if (cartItems != null && cartItems.isNotEmpty) 'items': cartItems,
+      if (metadata != null) 'metadata': metadata,
     };
 
     final body = jsonEncode(requestBody);
@@ -343,10 +352,10 @@ class PaymentService {
   /// Get available payment statuses using new constants
   List<String> getAvailablePaymentStatuses() {
     return [
-      'Pending',    // For COD
-      'Completed',  // For other payment methods
-      'Cancelled',  // For cancelled orders
-      'Refunded',   // For refunded orders
+      'Pending', // For COD
+      'Completed', // For other payment methods
+      'Cancelled', // For cancelled orders
+      'Refunded', // For refunded orders
     ];
   }
 
@@ -370,7 +379,8 @@ class PaymentService {
   /// Maintains backward compatibility by creating purchased_items from orders
   Map<String, dynamic> _processPaymentResponse(Map<String, dynamic> response) {
     try {
-      if (response['data'] != null && response['data'] is Map<String, dynamic>) {
+      if (response['data'] != null &&
+          response['data'] is Map<String, dynamic>) {
         final paymentData = response['data'] as Map<String, dynamic>;
 
         // Check if orders exist and convert to purchased_items for backward compatibility
@@ -381,7 +391,9 @@ class PaymentService {
           final purchasedItems = orders.map((order) {
             return {
               'product_id': order['product_id'],
-              'name': order['product_name'] ?? order['product']?['name'] ?? 'Unknown Product',
+              'name': order['product_name'] ??
+                  order['product']?['name'] ??
+                  'Unknown Product',
               'price': _parseDouble(order['price']),
               'quantity': order['quantity'] ?? 1,
               'subtotal': _parseDouble(order['subtotal']),
@@ -399,7 +411,8 @@ class PaymentService {
           // Add purchased_items for backward compatibility
           paymentData['purchased_items'] = purchasedItems;
 
-          print('Converted ${orders.length} orders to purchased_items with separate status tracking');
+          print(
+              'Converted ${orders.length} orders to purchased_items with separate status tracking');
         }
       }
 
@@ -412,7 +425,8 @@ class PaymentService {
   }
 
   /// Process payment history response to handle multiple payments with orders
-  Map<String, dynamic> _processPaymentHistoryResponse(Map<String, dynamic> response) {
+  Map<String, dynamic> _processPaymentHistoryResponse(
+      Map<String, dynamic> response) {
     try {
       if (response['data'] != null && response['data'] is List) {
         final payments = response['data'] as List;
@@ -427,15 +441,19 @@ class PaymentService {
               final purchasedItems = orders.map((order) {
                 return {
                   'product_id': order['product_id'],
-                  'name': order['product_name'] ?? order['product']?['name'] ?? 'Unknown Product',
+                  'name': order['product_name'] ??
+                      order['product']?['name'] ??
+                      'Unknown Product',
                   'price': _parseDouble(order['price']),
                   'quantity': order['quantity'] ?? 1,
                   'subtotal': _parseDouble(order['subtotal']),
                   'category_id': order['category_id'],
                   'purchased_at': order['purchased_at'],
-                  'product': order['product'], // Include full product details if available
+                  'product': order[
+                      'product'], // Include full product details if available
                   'status': order['status'] ?? 'Preparing', // Add order status
-                  'status_updated_at': order['status_updated_at'], // Add status update timestamp
+                  'status_updated_at':
+                      order['status_updated_at'], // Add status update timestamp
                 };
               }).toList();
 
@@ -445,7 +463,8 @@ class PaymentService {
           }
         }
 
-        print('Processed ${payments.length} payments in history with status tracking');
+        print(
+            'Processed ${payments.length} payments in history with status tracking');
       }
 
       return response;

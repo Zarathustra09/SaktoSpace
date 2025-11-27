@@ -4,7 +4,11 @@ import 'package:shop/constants.dart';
 import 'package:shop/services/chat_bot/chat_bot_service.dart';
 
 class HomeBotPage extends StatefulWidget {
-  const HomeBotPage({super.key});
+  /// Optional callback used when the back button should perform a custom
+  /// action (e.g. navigate to the home tab in a bottom navigation bar).
+  const HomeBotPage({super.key, this.onBack});
+
+  final VoidCallback? onBack;
   @override
   State<HomeBotPage> createState() => _HomeBotPageState();
 }
@@ -21,7 +25,12 @@ class _HomeBotPageState extends State<HomeBotPage> {
     // Add welcome message
     _messages.add(
       ChatMessage(
-        text: "Hello! I'm SaktoBot 🤖 I'm here to help you with questions about Sakto Space, our furniture AR app. How can I assist you today?",
+        text:
+            "Hello! I'm SaktoBot 🤖 I'm here to help you with questions about:\n\n"
+            "🪑 Furniture products and recommendations\n"
+            "📱 AR (Augmented Reality) features\n"
+            "🏠 Visualizing furniture in your space\n\n"
+            "Please note: I can only assist with AR and furniture-related topics. How can I help you today?",
         user: _bot,
         createdAt: DateTime.now(),
       ),
@@ -33,7 +42,16 @@ class _HomeBotPageState extends State<HomeBotPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("SaktoBot"),
-        leading: BackButton(onPressed: () => Navigator.pop(context)),
+        // If the parent provides an onBack callback (e.g. EntryPoint), call it
+        // so the back button can switch tabs instead of popping the root.
+        leading: widget.onBack != null
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: widget.onBack,
+              )
+            : (Navigator.canPop(context)
+                ? BackButton(onPressed: () => Navigator.pop(context))
+                : const SizedBox.shrink()),
       ),
       body: DashChat(
         currentUser: _user,
@@ -45,7 +63,8 @@ class _HomeBotPageState extends State<HomeBotPage> {
           containerColor: Colors.grey,
         ),
         inputOptions: const InputOptions(
-          inputDecoration: InputDecoration(hintText: 'Ask about Sakto Space...'),
+          inputDecoration:
+              InputDecoration(hintText: 'Ask about Sakto Space...'),
         ),
         typingUsers: _typingUsers,
       ),
@@ -53,18 +72,17 @@ class _HomeBotPageState extends State<HomeBotPage> {
   }
 
   void _handleSend(ChatMessage msg) async {
-    print('HomeBotPage: User sent message: ${msg.text}');
-
+    print('[HomeBotPage] Sending message: "${msg.text}"');
     setState(() {
       _messages.insert(0, msg);
       _typingUsers.add(_bot);
     });
 
     try {
-      print('HomeBotPage: Calling ChatBotService.generateResponse');
       final response = await ChatBotService.generateResponse(msg.text);
-      print('HomeBotPage: Received response: $response');
+      print('[HomeBotPage] Received response: $response');
 
+      if (!mounted) return;
       setState(() {
         _typingUsers.remove(_bot);
         _messages.insert(
@@ -76,19 +94,28 @@ class _HomeBotPageState extends State<HomeBotPage> {
           ),
         );
       });
-    } catch (e) {
-      print('HomeBotPage: Error occurred: $e');
+    } catch (e, stackTrace) {
+      print('[HomeBotPage] ERROR: $e');
+      print('[HomeBotPage] Stack trace: $stackTrace');
+
+      if (!mounted) return;
       setState(() {
         _typingUsers.remove(_bot);
         _messages.insert(
           0,
           ChatMessage(
-            text: "Sorry, I'm having trouble responding right now. Please try again later. Error: ${e.toString()}",
+            text: "Sorry, I'm having trouble responding right now. Error: $e",
             user: _bot,
             createdAt: DateTime.now(),
           ),
         );
       });
+
+      // Show error in UI for debugging
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Chat error: $e'), duration: Duration(seconds: 5)));
+      }
     }
   }
 }

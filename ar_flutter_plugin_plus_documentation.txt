@@ -1,0 +1,1015 @@
+ar_flutter_plugin library
+Classes
+AndroidARView
+Android-specific implementation of PlatformARView Uses Hybrid Composition to increase peformance on Android 9 and below (https://flutter.dev/docs/development/platform-integration/platform-views)
+ArFlutterPluginPlus
+ARView
+If camera permission is granted, ARView creates a platform-dependent view from the factory method PlatformARView. To instantiate an ARView, the calling widget needs to pass the callback function onARViewCreated to which the function createManagers returns managers such as the ARSessionManager and the ARObjectManager. planeDetectionConfig is passed to the constructor to determine which types of planes the underlying AR frameworks should track (defaults to none). If camera permission is not given, the user is prompted to grant it. To modify the UI of the prompts, the following named parameters can be used: permissionPromptDescription, permissionPromptButtonText and permissionPromptParentalRestriction.
+IosARView
+iOS-specific implementation of PlatformARView
+PlatformARView
+Factory method for creating a platform-dependent AR view
+Functions
+createManagers(int id, BuildContext? context, ARViewCreatedCallback? arViewCreatedCallback, PlaneDetectionConfig? planeDetectionConfig) → dynamic
+Instantiates ARSessionManager, ARObjectManager and returns them to the widget instantiating the ARView using the arViewCreatedCallback
+Typedefs
+ARViewCreatedCallback = void Function(ARSessionManager arSessionManager, ARObjectManager arObjectManager, ARAnchorManager arAnchorManager, ARLocationManager arLocationManager)
+
+ar_flutter_plugin_plus library
+Classes
+AndroidARView
+Android-specific implementation of PlatformARView Uses Hybrid Composition to increase peformance on Android 9 and below (https://flutter.dev/docs/development/platform-integration/platform-views)
+ArFlutterPluginPlus
+ARView
+If camera permission is granted, ARView creates a platform-dependent view from the factory method PlatformARView. To instantiate an ARView, the calling widget needs to pass the callback function onARViewCreated to which the function createManagers returns managers such as the ARSessionManager and the ARObjectManager. planeDetectionConfig is passed to the constructor to determine which types of planes the underlying AR frameworks should track (defaults to none). If camera permission is not given, the user is prompted to grant it. To modify the UI of the prompts, the following named parameters can be used: permissionPromptDescription, permissionPromptButtonText and permissionPromptParentalRestriction.
+IosARView
+iOS-specific implementation of PlatformARView
+PlatformARView
+Factory method for creating a platform-dependent AR view
+Functions
+createManagers(int id, BuildContext? context, ARViewCreatedCallback? arViewCreatedCallback, PlaneDetectionConfig? planeDetectionConfig) → dynamic
+Instantiates ARSessionManager, ARObjectManager and returns them to the widget instantiating the ARView using the arViewCreatedCallback
+Typedefs
+ARViewCreatedCallback = void Function(ARSessionManager arSessionManager, ARObjectManager arObjectManager, ARAnchorManager arAnchorManager, ARLocationManager arLocationManager)
+
+ARView class
+If camera permission is granted, ARView creates a platform-dependent view from the factory method PlatformARView. To instantiate an ARView, the calling widget needs to pass the callback function onARViewCreated to which the function createManagers returns managers such as the ARSessionManager and the ARObjectManager. planeDetectionConfig is passed to the constructor to determine which types of planes the underlying AR frameworks should track (defaults to none). If camera permission is not given, the user is prompted to grant it. To modify the UI of the prompts, the following named parameters can be used: permissionPromptDescription, permissionPromptButtonText and permissionPromptParentalRestriction.
+
+Inheritance
+Object DiagnosticableTree Widget StatefulWidget ARView
+Constructors
+ARView({Key? key, required ARViewCreatedCallback onARViewCreated, PlaneDetectionConfig planeDetectionConfig = PlaneDetectionConfig.none, bool showPlatformType = false, String permissionPromptDescription = "Camera permission must be given to the app for AR functions to work", String permissionPromptButtonText = "Grant Permission", String permissionPromptParentalRestriction = "Camera permission is restriced by the OS, please check parental control settings"})
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+key → Key?
+Controls how one widget replaces another widget in the tree.
+finalinherited
+onARViewCreated → ARViewCreatedCallback
+Function to be called when the AR View is created
+final
+permissionPromptButtonText → String
+final
+permissionPromptDescription → String
+final
+permissionPromptParentalRestriction → String
+final
+planeDetectionConfig → PlaneDetectionConfig
+Configures the type of planes ARCore and ARKit should track. defaults to none
+final
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+showPlatformType → bool
+Configures whether or not to display the device's platform type above the AR view. Defaults to false
+final
+Methods
+createElement() → StatefulElement
+Creates a StatefulElement to manage this widget's location in the tree.
+inherited
+createState() → _ARViewState
+Creates the mutable state for this widget at a given location in the tree.
+override
+debugDescribeChildren() → List<DiagnosticsNode>
+Returns a list of DiagnosticsNode objects describing this node's children.
+inherited
+debugFillProperties(DiagnosticPropertiesBuilder properties) → void
+Add additional properties associated with the node.
+inherited
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toDiagnosticsNode({String? name, DiagnosticsTreeStyle? style}) → DiagnosticsNode
+Returns a debug representation of the object that is used by debugging tools and by DiagnosticsNode.toStringDeep.
+inherited
+toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) → String
+A string representation of this object.
+inherited
+toStringDeep({String prefixLineOne = '', String? prefixOtherLines, DiagnosticLevel minLevel = DiagnosticLevel.debug, int wrapWidth = 65}) → String
+Returns a string representation of this node and its descendants.
+inherited
+toStringShallow({String joiner = ', ', DiagnosticLevel minLevel = DiagnosticLevel.debug}) → String
+Returns a one-line detailed description of the object.
+inherited
+toStringShort() → String
+A short, textual description of this widget.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+
+AndroidARView class
+Android-specific implementation of PlatformARView Uses Hybrid Composition to increase peformance on Android 9 and below (https://flutter.dev/docs/development/platform-integration/platform-views)
+
+Implemented types
+PlatformARView
+Constructors
+AndroidARView()
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+build({BuildContext? context, ARViewCreatedCallback? arViewCreatedCallback, PlaneDetectionConfig? planeDetectionConfig}) → Widget
+override
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+onPlatformViewCreated(int id) → void
+Callback function that is executed once the view is established
+override
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+
+ARViewCreatedCallback typedef
+ARViewCreatedCallback = void Function(
+ARSessionManager arSessionManager,
+ARObjectManager arObjectManager,
+ARAnchorManager arAnchorManager,
+ARLocationManager arLocationManager
+)
+Implementation
+typedef ARViewCreatedCallback = void Function(
+    ARSessionManager arSessionManager,
+    ARObjectManager arObjectManager,
+    ARAnchorManager arAnchorManager,
+    ARLocationManager arLocationManager);
+
+ARHitTestResult class
+A result (type, distance from the camera, world transformation) of an intersection found during a hit-test.
+
+Constructors
+ARHitTestResult(ARHitTestResultType type, double distance, Matrix4 worldTransform)
+Properties
+distance → double
+The distance from the camera to the intersection in meters.
+final
+hashCode → int
+The hash code for this object.
+no setterinherited
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+type → ARHitTestResultType
+The type of the hit-test result.
+final
+worldTransform → Matrix4
+The transformation matrix that defines the intersection’s rotation, translation and scale relative to the world.
+final
+Methods
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toJson() → Map<String, dynamic>
+Serializes the ARHitTestResult
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+Static Methods
+fromJson(Map<String, dynamic> json) → ARHitTestResult
+Instantiates am ARHitTestResult from a serialized ARHitTestResult
+
+ARHitTestResultTypeConverter class
+Helper class to convert the type of an ARHitTestResult from its integer representation to the ARHitTestResultType and vice versa
+
+Constructors
+ARHitTestResultTypeConverter()
+const
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+fromJson(int json) → ARHitTestResultType
+Converts the type of an ARHitTestResult from its integer representation to the ARHitTestResultType
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toJson(ARHitTestResultType object) → int
+Converts the type of an ARHitTestResult from its ARHitTestResultType to an integer representation
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+
+ARLocationManager class
+Can be used to get the current location of the device, update it and handle location permissions
+
+Constructors
+ARLocationManager()
+Properties
+currentLocation ↔ Position
+getter/setter pair
+hashCode → int
+The hash code for this object.
+no setterinherited
+locationStream ↔ StreamSubscription<Position>
+getter/setter pair
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+getLastKnownPosition() → Future<Position?>
+Returns the last known location of the device or an error, if permissions don't suffice. Automatically queries user permission if possible
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+openAppPermissionSettings() → void
+Opens the settings of the current application
+openLocationServicesSettings() → void
+Opens the device settings where location services can be enabled
+startLocationUpdates() → Future<bool>
+Starts high precision location updates to keep track of the device's position. Returns true or an error, if permissions don't suffice. Automatically queries user permission if possible
+stopLocationUpdates() → void
+Stops the high-precision location updates
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+
+ARAnchorManager class
+Handles all anchor-related functionality of an ARView, including configuration and usage of collaborative sessions
+
+Constructors
+ARAnchorManager(int id, {bool debug = false})
+Properties
+debug → bool
+Debugging status flag. If true, all platform calls are printed. Defaults to false.
+final
+hashCode → int
+The hash code for this object.
+no setterinherited
+onAnchorDownloaded ↔ AnchorDownloadedHandler?
+Callback that is triggered once an anchor has successfully been downloaded from the google cloud anchor API and resolved within the current scene
+getter/setter pair
+onAnchorUploaded ↔ AnchorUploadedHandler?
+Callback that is triggered once an anchor has successfully been uploaded to the google cloud anchor API
+getter/setter pair
+pendingAnchors ↔ List<ARAnchor>
+Reference to all anchors that are being uploaded to the google cloud anchor API
+getter/setter pair
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+addAnchor(ARAnchor anchor) → Future<bool?>
+Add given anchor to the underlying AR scene
+downloadAnchor(String cloudanchorid) → Future<bool?>
+Try to download anchor with the given ID from the Google Cloud Anchor API and add it to the scene
+initGoogleCloudAnchorMode() → dynamic
+Activates collaborative AR mode (using Google Cloud Anchors)
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+removeAnchor(ARAnchor anchor) → dynamic
+Remove given anchor and all its children from the AR Scene
+toString() → String
+A string representation of this object.
+inherited
+uploadAnchor(ARAnchor anchor) → Future<bool?>
+Upload given anchor from the underlying AR scene to the Google Cloud Anchor API
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+
+AnchorDownloadedHandler = ARAnchor Function(
+Map<String, dynamic> serializedAnchor
+)
+Implementation
+typedef AnchorDownloadedHandler = ARAnchor Function(
+    Map<String, dynamic> serializedAnchor);
+
+AnchorUploadedHandler typedef
+AnchorUploadedHandler = void Function(
+ARAnchor arAnchor
+)
+Implementation
+typedef AnchorUploadedHandler = void Function(ARAnchor arAnchor);
+
+AnchorType enum
+Determines which types of anchors the plugin supports
+
+Inheritance
+Object Enum AnchorType
+Available extensions
+EnumName
+Values
+plane → const AnchorType
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+index → int
+A numeric identifier for the enumerated value.
+no setterinherited
+name → String
+Available on Enum, provided by the EnumName extension
+
+The name of the enum value.
+no setter
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+Constants
+values → const List<AnchorType>
+A constant List of the values in this enum, in order of their declaration.
+
+PlaneDetectionConfig enum
+Determines which types of planes ARCore and ARKit should track
+
+Inheritance
+Object Enum PlaneDetectionConfig
+Available extensions
+EnumName
+Values
+none → const PlaneDetectionConfig
+horizontal → const PlaneDetectionConfig
+vertical → const PlaneDetectionConfig
+horizontalAndVertical → const PlaneDetectionConfig
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+index → int
+A numeric identifier for the enumerated value.
+no setterinherited
+name → String
+Available on Enum, provided by the EnumName extension
+
+The name of the enum value.
+no setter
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+Constants
+values → const List<PlaneDetectionConfig>
+A constant List of the values in this enum, in order of their declaration.
+
+ARHitTestResultType enum
+Determines which types of hit results the plugin supports
+
+Inheritance
+Object Enum ARHitTestResultType
+Available extensions
+EnumName
+Values
+undefined → const ARHitTestResultType
+plane → const ARHitTestResultType
+point → const ARHitTestResultType
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+index → int
+A numeric identifier for the enumerated value.
+no setterinherited
+name → String
+Available on Enum, provided by the EnumName extension
+
+The name of the enum value.
+no setter
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+Constants
+values → const List<ARHitTestResultType>
+A constant List of the values in this enum, in order of their declaration.
+
+NodeType enum
+Determines which types of nodes the plugin supports
+
+Inheritance
+Object Enum NodeType
+Available extensions
+EnumName
+Values
+localGLTF2 → const NodeType
+localGLB → const NodeType
+webGLB → const NodeType
+fileSystemAppFolderGLB → const NodeType
+fileSystemAppFolderGLTF2 → const NodeType
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+index → int
+A numeric identifier for the enumerated value.
+no setterinherited
+name → String
+Available on Enum, provided by the EnumName extension
+
+The name of the enum value.
+no setter
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+Constants
+values → const List<NodeType>
+A constant List of the values in this enum, in order of their declaration.
+
+ARObjectManager class
+Manages the all node-related actions of an ARView
+
+Constructors
+ARObjectManager(int id, {bool debug = false})
+Properties
+debug → bool
+Debugging status flag. If true, all platform calls are printed. Defaults to false.
+final
+hashCode → int
+The hash code for this object.
+no setterinherited
+onNodeTap ↔ NodeTapResultHandler?
+Callback function that is invoked when the platform detects a tap on a node
+getter/setter pair
+onPanChange ↔ NodePanChangeHandler?
+getter/setter pair
+onPanEnd ↔ NodePanEndHandler?
+getter/setter pair
+onPanStart ↔ NodePanStartHandler?
+getter/setter pair
+onRotationChange ↔ NodeRotationChangeHandler?
+getter/setter pair
+onRotationEnd ↔ NodeRotationEndHandler?
+getter/setter pair
+onRotationStart ↔ NodeRotationStartHandler?
+getter/setter pair
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+addNode(ARNode node, {ARPlaneAnchor? planeAnchor}) → Future<bool?>
+Add given node to the given anchor of the underlying AR scene (or to its top-level if no anchor is given) and listen to any changes made to its transformation
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+onInitialize() → dynamic
+Sets up the AR Object Manager
+removeNode(ARNode node) → dynamic
+Remove given node from the AR Scene
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+
+NodePanChangeHandler typedef
+NodePanChangeHandler = void Function(
+String node
+)
+Implementation
+typedef NodePanChangeHandler = void Function(String node);
+
+NodePanEndHandler typedef
+NodePanEndHandler = void Function(
+String node,
+Matrix4 transform
+)
+Implementation
+typedef NodePanEndHandler = void Function(String node, Matrix4 transform);
+
+NodePanStartHandler typedef
+NodePanStartHandler = void Function(
+String node
+)
+Implementation
+typedef NodePanStartHandler = void Function(String node);
+
+NodeRotationChangeHandler typedef
+NodeRotationChangeHandler = void Function(
+String node
+)
+Implementation
+typedef NodeRotationChangeHandler = void Function(String node);
+
+NodeRotationEndHandler typedef
+NodeRotationEndHandler = void Function(
+String node,
+Matrix4 transform
+)
+Implementation
+typedef NodeRotationEndHandler = void Function(String node, Matrix4 transform);
+
+NodeRotationStartHandler typedef
+NodeRotationStartHandler = void Function(
+String node
+)
+Implementation
+typedef NodeRotationStartHandler = void Function(String node);
+
+NodeTapResultHandler typedef
+NodeTapResultHandler = void Function(
+List<String> nodes
+)
+Implementation
+typedef NodeTapResultHandler = void Function(List<String> nodes);
+
+ARSessionManager class
+Manages the session configuration, parameters and events of an ARView
+
+Constructors
+ARSessionManager(int id, BuildContext buildContext, PlaneDetectionConfig planeDetectionConfig, {bool debug = false})
+Properties
+buildContext → BuildContext
+Context of the ARView widget that this manager is attributed to
+final
+debug → bool
+Debugging status flag. If true, all platform calls are printed. Defaults to false.
+final
+hashCode → int
+The hash code for this object.
+no setterinherited
+onImageDetected ↔ ARImageDetectionResultHandler?
+Receives detection results when tracked images are detected
+getter/setter pair
+onPlaneOrPointTap ↔ ARHitResultHandler
+Receives hit results from user taps with tracked planes or feature points
+getter/setter pair
+planeDetectionConfig → PlaneDetectionConfig
+Determines the types of planes ARCore and ARKit should show
+final
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+dispose() → dynamic
+Dispose the AR view on the platforms to pause the scenes and disconnect the platform handlers. You should call this before removing the AR view to prevent out of memory erros
+getCameraPose() → Future<Matrix4?>
+Returns the camera pose in Matrix4 format with respect to the world coordinate system of the ARView
+getDistanceBetweenAnchors(ARAnchor anchor1, ARAnchor anchor2) → Future<double?>
+Returns the distance in meters between @anchor1 and @anchor2.
+getDistanceBetweenVectors(Vector3 vector1, Vector3 vector2) → double
+Returns the distance in meters between @vector1 and @vector2.
+getDistanceFromAnchor(ARAnchor anchor) → Future<double?>
+Returns the distance in meters between @anchor and device's camera.
+getPose(ARAnchor anchor) → Future<Matrix4?>
+Returns the given anchor pose in Matrix4 format with respect to the world coordinate system of the ARView
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+onError(String errorMessage) → dynamic
+Displays the errorMessage in a snackbar of the parent widget
+onInitialize({bool showAnimatedGuide = true, bool showFeaturePoints = false, bool showPlanes = true, String? customPlaneTexturePath, bool showWorldOrigin = false, bool handleTaps = true, bool handlePans = false, bool handleRotation = false, List<String>? trackingImagePaths}) → dynamic
+Function to initialize the platform-specific AR view. Can be used to initially set or update session settings. customPlaneTexturePath refers to flutter assets from the app that is calling this function, NOT to assets within this plugin. Make sure the assets are correctly registered in the pubspec.yaml of the parent app (e.g. the ./example app in this plugin's repo)
+snapshot() → Future<ImageProvider<Object>>
+Returns a future ImageProvider that contains a screenshot of the current AR Scene
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+
+ARHitResultHandler typedef
+ARHitResultHandler = void Function(
+List<ARHitTestResult> hits
+)
+Implementation
+typedef ARHitResultHandler = void Function(List<ARHitTestResult> hits);
+
+ARImageDetectionResultHandler typedef
+ARImageDetectionResultHandler = void Function(
+String imageName,
+Matrix4 transformation
+)
+Implementation
+typedef ARImageDetectionResultHandler = void Function(
+    String imageName, Matrix4 transformation);
+
+
+ARAnchor class abstract
+Object attached to a tracked physical entity of the AR environment (can be initialized with a world transformation)
+
+Implementers
+ARPlaneAnchorARUnkownAnchor
+Constructors
+ARAnchor({required AnchorType type, required Matrix4 transformation, String? name})
+ARAnchor.fromJson(Map<String, dynamic> arguments)
+Constructs an ARAnchor from a serialized anchor object
+factory
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+name → String
+Determines the name of the ARAnchor Will be autogenerated if not defined.
+final
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+transformation → Matrix4
+Defines the anchor’s rotation, translation and scale in world coordinates.
+final
+type → AnchorType
+Specifies the AnchorType of this ARAnchor
+final
+Methods
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toJson() → Map<String, dynamic>
+Serializes an ARAnchor
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+
+ARPlaneAnchor class
+An ARAnchor fixed to a tracked plane
+
+Inheritance
+Object ARAnchor ARPlaneAnchor
+Constructors
+ARPlaneAnchor({required Matrix4 transformation, String? name, List<String>? childNodes, String? cloudanchorid, int? ttl})
+Properties
+childNodes ↔ List<String>
+Names of ARNodes attached to this APlaneRAnchor
+getter/setter pair
+cloudanchorid ↔ String?
+ID associated with the anchor after uploading it to the google cloud anchor API
+getter/setter pair
+hashCode → int
+The hash code for this object.
+no setterinherited
+name → String
+Determines the name of the ARAnchor Will be autogenerated if not defined.
+finalinherited
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+transformation → Matrix4
+Defines the anchor’s rotation, translation and scale in world coordinates.
+finalinherited
+ttl ↔ int?
+Time to live of the anchor: Determines how long the anchor is stored once it is uploaded to the google cloud anchor API (optional, defaults to 1 day (24hours))
+getter/setter pair
+type → AnchorType
+Specifies the AnchorType of this ARAnchor
+finalinherited
+Methods
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toJson() → Map<String, dynamic>
+Serializes an ARAnchor
+override
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+Static Methods
+fromJson(Map<String, dynamic> json) → ARPlaneAnchor
+
+ARUnkownAnchor class
+An ARAnchor type that is not supported yet
+
+Inheritance
+Object ARAnchor ARUnkownAnchor
+Constructors
+ARUnkownAnchor({required AnchorType type, required Matrix4 transformation, String? name})
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+name → String
+Determines the name of the ARAnchor Will be autogenerated if not defined.
+finalinherited
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+transformation → Matrix4
+Defines the anchor’s rotation, translation and scale in world coordinates.
+finalinherited
+type → AnchorType
+Specifies the AnchorType of this ARAnchor
+finalinherited
+Methods
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toJson() → Map<String, dynamic>
+Serializes an ARAnchor
+override
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+Static Methods
+fromJson(Map<String, dynamic> json) → ARUnkownAnchor
+
+aRPlaneAnchorFromJson function
+ARPlaneAnchor aRPlaneAnchorFromJson( Map<String, dynamic> json )
+Constructs an ARPlaneAnchor from a serialized PlaneAnchor object
+
+Implementation
+ARPlaneAnchor aRPlaneAnchorFromJson(Map<String, dynamic> json) {
+  return ARPlaneAnchor(
+    transformation:
+        const MatrixConverter().fromJson(json['transformation'] as List),
+    name: json['name'] as String,
+    childNodes: json['childNodes']
+        ?.map((child) => child.toString())
+        ?.toList()
+        ?.cast<String>(),
+    cloudanchorid: json['cloudanchorid'] as String?,
+    ttl: json['ttl'] as int?,
+  );
+}
+
+aRPlaneAnchorToJson function
+Map<String, dynamic> aRPlaneAnchorToJson( ARPlaneAnchor instance )
+Serializes an ARPlaneAnchor
+
+Implementation
+Map<String, dynamic> aRPlaneAnchorToJson(ARPlaneAnchor instance) {
+  return <String, dynamic>{
+    'type': instance.type.index,
+    'transformation': MatrixConverter().toJson(instance.transformation),
+    'name': instance.name,
+    'childNodes': instance.childNodes,
+    'cloudanchorid': instance.cloudanchorid,
+    'ttl': instance.ttl,
+  };
+}
+
+aRUnkownAnchorFromJson function
+ARUnkownAnchor aRUnkownAnchorFromJson( Map<String, dynamic> json )
+Implementation
+ARUnkownAnchor aRUnkownAnchorFromJson(Map<String, dynamic> json) {
+  return ARUnkownAnchor(
+    type: json['type'],
+    transformation:
+        const MatrixConverter().fromJson(json['transformation'] as List),
+    name: json['name'] as String,
+  );
+}
+
+aRUnkownAnchorToJson function
+Map<String, dynamic> aRUnkownAnchorToJson( ARUnkownAnchor instance )
+Implementation
+Map<String, dynamic> aRUnkownAnchorToJson(ARUnkownAnchor instance) {
+  return <String, dynamic>{
+    'type': instance.type.index,
+    'transformation': MatrixConverter().toJson(instance.transformation),
+    'name': instance.name,
+  };
+}
+
+ARNode class
+ARNode is the model class for node-tree objects. It encapsulates the position, rotations, and other transforms of a node, which define a coordinate system. The coordinate systems of all the sub-nodes are relative to the one of their parent node.
+
+Constructors
+ARNode({required NodeType type, required String uri, String? name, Vector3? position, Vector3? scale, Vector4? rotation, Vector3? eulerAngles, Matrix4? transformation, Map<String, dynamic>? data})
+Properties
+data ↔ Map<String, dynamic>?
+Holds any data attached to the node, especially useful when uploading serialized nodes to the cloud. This data is not shared with the underlying platform
+getter/setter pair
+eulerAngles ↔ Vector3
+Determines the receiver's euler angles. The order of components in this vector matches the axes of rotation:
+getter/setter pair
+hashCode → int
+The hash code for this object.
+no setterinherited
+name → String
+Determines the name of the receiver. Will be autogenerated if not defined.
+final
+position ↔ Vector3
+Determines the receiver's position.
+getter/setter pair
+rotation ↔ Matrix3
+Determines the receiver's rotation.
+getter/setter pair
+rotationFromQuaternion ← Quaternion
+no getter
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+scale ↔ Vector3
+Determines the receiver's scale.
+getter/setter pair
+transform ↔ Matrix4
+Determines the receiver's transform. The transform is the combination of the position, rotation and scale defined below. So when the transform is set, the receiver's position, rotation and scale are changed to match the new transform.
+getter/setter pair
+transformNotifier → ValueNotifier<Matrix4>
+final
+type ↔ NodeType
+Specifies the receiver's NodeType
+getter/setter pair
+uri ↔ String
+Specifies the path to the 3D model used for the ARNode. Depending on the type, this is either a relative path or an URL to an online asset
+getter/setter pair
+Methods
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toMap() → Map<String, dynamic>
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+Static Methods
+fromMap(Map<String, dynamic> map) → ARNode
+
+MatrixValueNotifierConverter class
+Constructors
+MatrixValueNotifierConverter()
+const
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+fromJson(List json) → ValueNotifier<Matrix4>
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toJson(ValueNotifier<Matrix4> matrix) → List
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+
+createTransformMatrix function
+Matrix4 createTransformMatrix(
+Matrix4? origin,
+Vector3? position,
+Vector3? scale,
+Vector4? rotation,
+Vector3? eulerAngles,
+)
+Helper function to create a Matrix4 from either a given matrix or from position, scale and rotation relative to the origin
+
+Implementation
+Matrix4 createTransformMatrix(Matrix4? origin, Vector3? position,
+    Vector3? scale, Vector4? rotation, Vector3? eulerAngles) {
+  final transform = origin ?? Matrix4.identity();
+
+  if (position != null) {
+    transform.setTranslation(position);
+  }
+  if (rotation != null) {
+    transform.rotate(
+        Vector3(rotation[0], rotation[1], rotation[2]), rotation[3]);
+  }
+  if (eulerAngles != null) {
+    transform.matrixEulerAngles = eulerAngles;
+  }
+  if (scale != null) {
+    transform.scaledByVector3(scale);
+  } else {
+    transform.scaleByDouble(1.0, 1.0, 1.0, 1.0);
+  }
+  return transform;
+}
+
+Matrix4Extenstion extension
+on
+Matrix4
+Properties
+matrixEulerAngles ↔ Vector3
+Available on Matrix4, provided by the Matrix4Extenstion extension
+
+getter/setter pair
+matrixScale → Vector3
+Available on Matrix4, provided by the Matrix4Extenstion extension
+
+no setter
+
+MatrixConverter class
+Constructors
+MatrixConverter()
+const
+Properties
+hashCode → int
+The hash code for this object.
+no setterinherited
+runtimeType → Type
+A representation of the runtime type of the object.
+no setterinherited
+Methods
+fromJson(List json) → Matrix4
+noSuchMethod(Invocation invocation) → dynamic
+Invoked when a nonexistent method or property is accessed.
+inherited
+toJson(Matrix4 matrix) → List
+toString() → String
+A string representation of this object.
+inherited
+Operators
+operator ==(Object other) → bool
+The equality operator.
+inherited
+
+createManagers function
+dynamic createManagers(
+int id,
+BuildContext? context,
+ARViewCreatedCallback? arViewCreatedCallback,
+PlaneDetectionConfig? planeDetectionConfig,
+)
+Instantiates ARSessionManager, ARObjectManager and returns them to the widget instantiating the ARView using the arViewCreatedCallback
+
+Implementation
+createManagers(
+    int id,
+    BuildContext? context,
+    ARViewCreatedCallback? arViewCreatedCallback,
+    PlaneDetectionConfig? planeDetectionConfig) {
+  if (context == null ||
+      arViewCreatedCallback == null ||
+      planeDetectionConfig == null) {
+    return;
+  }
+  arViewCreatedCallback(ARSessionManager(id, context, planeDetectionConfig),
+      ARObjectManager(id), ARAnchorManager(id), ARLocationManager());
+}
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop/constants.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -127,7 +128,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       return ListTile(
                         title: Text(product['name']),
                         subtitle: Text(
-                            '${product['category']} - \$${product['price']}'),
+                            '${product['category']} - ${formatPeso(product['price'])}'),
                         onTap: () {
                           // Navigate to product details
                         },
