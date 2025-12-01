@@ -139,7 +139,8 @@ class PaymentService {
       if (recipientName != null) 'recipient_name': recipientName,
       if (recipientContact != null) 'recipient_contact': recipientContact,
       if (orderId != null) 'order_id': orderId,
-      if (cartItems != null && cartItems.isNotEmpty) 'items': cartItems,
+      // Always include items array so backend processes only specified items
+      'items': cartItems ?? [],
       if (metadata != null) 'metadata': metadata,
     };
 

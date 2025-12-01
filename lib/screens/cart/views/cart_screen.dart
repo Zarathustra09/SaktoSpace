@@ -17,7 +17,7 @@ class _CartScreenState extends State<CartScreen> {
   final CartService _cartService = CartService();
   List<dynamic> _cartItems = [];
   // _total is no longer needed because we compute the selected total
-  // Items selected for checkout (product IDs)
+  // Items selected for checkout (cart item IDs)
   Set<int> _selectedItems = {};
   bool _isLoading = true;
   String? _error;
@@ -44,8 +44,14 @@ class _CartScreenState extends State<CartScreen> {
           // Default: select all items. If selections already exist, keep only
           // the intersection so we preserve previously toggled choices.
           final newIds = _cartItems.map<int>((i) => i['id'] as int).toSet();
-          // Always select all items by default.
-          _selectedItems = newIds;
+          // Default behavior: if there were no selected items before, select all.
+          // If the user had toggled items, keep those selections but ensure they're
+          // still present in the refreshed cart (intersection with new IDs).
+          if (_selectedItems.isEmpty) {
+            _selectedItems = newIds;
+          } else {
+            _selectedItems = _selectedItems.intersection(newIds);
+          }
           _isLoading = false;
         });
       }
@@ -73,14 +79,14 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  Future<void> _subtractQuantity(int productId, int quantity) async {
+  Future<void> _subtractQuantity(int itemId, int quantity) async {
     if (_isLoading) return;
     try {
       if (quantity > 1) {
         await _cartService.updateQuantity(
-            itemId: productId, quantity: quantity - 1);
+            itemId: itemId, quantity: quantity - 1);
       } else {
-        await _cartService.removeItem(productId);
+        await _cartService.removeItem(itemId);
       }
       await _fetchCart();
     } catch (e) {
@@ -106,12 +112,12 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   // Selection is always enabled — items are always selected in this release.
-  void _toggleSelection(int productId) {
+  void _toggleSelection(int itemId) {
     setState(() {
-      if (_selectedItems.contains(productId)) {
-        _selectedItems.remove(productId);
+      if (_selectedItems.contains(itemId)) {
+        _selectedItems.remove(itemId);
       } else {
-        _selectedItems.add(productId);
+        _selectedItems.add(itemId);
       }
     });
   }
@@ -233,8 +239,11 @@ class _CartScreenState extends State<CartScreen> {
                       itemCount: _cartItems.length,
                       itemBuilder: (context, index) {
                         final item = _cartItems[index];
-                        final int productId = item['id'];
-                        final int quantity = item['quantity'];
+                        final int itemId = item['id'] as int;
+                        final int quantity = item['quantity'] as int;
+                        final int productId = item['product']?['id'] ??
+                            item['product_id'] ??
+                            item['id'];
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
@@ -306,10 +315,10 @@ class _CartScreenState extends State<CartScreen> {
                                       child: Transform.scale(
                                         scale: 0.85,
                                         child: Checkbox(
-                                          value: _selectedItems
-                                              .contains(productId),
+                                          value:
+                                              _selectedItems.contains(itemId),
                                           onChanged: (_) =>
-                                              _toggleSelection(productId),
+                                              _toggleSelection(itemId),
                                         ),
                                       ),
                                     ),
@@ -359,7 +368,7 @@ class _CartScreenState extends State<CartScreen> {
                                               borderRadius:
                                                   BorderRadius.circular(16),
                                               onTap: () => _subtractQuantity(
-                                                  productId, quantity),
+                                                  itemId, quantity),
                                               child: Container(
                                                 width: 32,
                                                 height: 32,

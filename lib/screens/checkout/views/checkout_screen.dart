@@ -129,15 +129,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         List<Map<String, dynamic>>? paymentItems;
         if (widget.cartItems.isNotEmpty) {
           paymentItems = widget.cartItems
-              .map((item) => {
-                    'product_id': item['id'] ?? item['product_id'],
-                    'quantity': item['quantity'] ?? 1,
-                    'price': item['price'],
-                    'name': item['name'],
-                  })
+              .map((item) {
+                // Prefer product id from nested product object if available
+                final productId = item['product'] != null
+                    ? (item['product']['id'] ?? item['product']['product_id'])
+                    : (item['product_id'] ?? item['id']);
+
+                if (productId == null) return null;
+
+                return {
+                  'product_id': productId,
+                  'quantity': item['quantity'] ?? 1,
+                  'price': item['price'] ?? item['product']?['price'],
+                  'name': item['name'] ?? item['product']?['name'],
+                };
+              })
+              .where((e) => e != null)
+              .cast<Map<String, dynamic>>()
               .toList();
         }
 
+        print('DEBUG: Sending paymentItems: $paymentItems');
         result = await _paymentService.processPayment(
           paymentMethod: _selectedPaymentMethod,
           billingAddress: billingAddress,
@@ -160,7 +172,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
 
       if (!widget.isDirectPurchase) {
-        await _cartService.clearCart();
+        // Remove only the purchased items from the cart, not all items
+        for (final item in widget.cartItems) {
+          final cartItemId = item['id'];
+          if (cartItemId != null) {
+            try {
+              await _cartService.removeItem(cartItemId);
+            } catch (e) {
+              // Ignore errors removing individual items (they may already be gone)
+              print('Warning: Could not remove cart item $cartItemId: $e');
+            }
+          }
+        }
       }
 
       if (mounted) {
